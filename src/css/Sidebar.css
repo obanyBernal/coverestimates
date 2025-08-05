@@ -1,0 +1,38 @@
+.sidebar {
+  width: 250px;
+  background-color: #0b3d5c;
+  color: white;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.sidebar-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.sidebar-nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 2rem 0;
+}
+
+.sidebar-nav li {
+  margin-bottom: 1rem;
+  cursor: pointer;
+}
+
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-avatar {
+  width: 48px;
+  height: 48px;
+  background-color: #ccc;
+  border-radius: 50%;
+}
