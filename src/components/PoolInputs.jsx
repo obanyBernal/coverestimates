@@ -642,3 +642,8 @@ export const solidCustom = [
   { min: 1251, max: 1600, price5x5: 3.18, price3x3: 4.94 },
   { min: 1601, max: 2099, price5x5: 3.07, price3x3: 4.92 }
 ];
+
+export const tasaDescuento = [
+  { descuento1: "40%"},
+  { descuento2: "45%"},
+];
