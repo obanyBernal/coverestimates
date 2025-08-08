@@ -7,9 +7,9 @@ const Sidebar = () => {
       <h2 className="sidebar-title">Prices Calculator</h2>
       <nav className="sidebar-nav">
         <ul>
-          <li>📋 Menú</li>
-          <li>💲 Precios</li>
-          <li>🔢 Tablas de Precios</li>
+          <li> Menú</li>
+          <li> Precios</li>
+          <li> Tablas de Precios</li>
         </ul>
       </nav>
       <div className="sidebar-user">
