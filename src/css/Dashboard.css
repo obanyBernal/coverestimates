@@ -1,15 +1,19 @@
 .dashboard-container {
   display: flex;
-  height: 100vh;
-  font-family: sans-serif;
+  height: 100vh;           /* ya lo tenías */
+  font-family: sans-serif; /* ya lo tenías */
+  overflow: hidden;        /* 🔒 evita scroll del body */
 }
 
 .dashboard-main {
   flex: 1;
   display: flex;
+  padding-top: .5rem;
   flex-direction: column;
   padding: 2rem;
   background-color: #f4f4f4;
+  height: 100vh;           /* 🔑 ocupa alto completo */
+  overflow-y: auto;        /* 🧭 scroll SOLO aquí */
 }
 
 .dashboard-footer {

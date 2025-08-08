@@ -1,60 +1,156 @@
-.price-calculator {
-  background: #fff;
-  padding: 2rem;
-  border-radius: 8px;
-  margin-bottom: 2rem;
+:root{
+  --primary:#0b3d5c;
+  --primary-600:#07324b;
+  --card:#fff;
+  --muted:#6e8796;
+  --line:#e4edf3;
+  --soft:#f6fafc;
+  --soft-2:#eef5f9;
 }
 
-.section {
-  margin-bottom: 2rem;
+.price-calculator{
+  background: transparent;
+  padding: 0;
 }
 
-.section h3 {
-  margin-bottom: 1rem;
-  border-bottom: 1px solid #ccc;
-  padding-bottom: 0.5rem;
+/* CARD/SECTION */
+.section{
+  background: var(--card);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin: 1rem 0 1.25rem;
+  box-shadow: 0 6px 20px rgba(11,61,92,.06);
+  border: 1px solid var(--line);
+}
+
+.section h3{
+  margin: 0 0 .75rem 0;
   font-size: 1rem;
-  color: #0b3d5c;
+  color: var(--primary);
+  font-weight: 700;
+  position: relative;
+}
+.section h3::after{
+  content:"";
+  display:block;
+  width:120px;
+  height:2px;
+  background: var(--line);
+  margin-top: .35rem;
 }
 
+/* LAYOUT */
 .row {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
 }
-
-input,
-select {
-  padding: 0.75rem;
-  flex: 1;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+.row > *{
+  flex:1 1 260px;
+  min-width:240px;
 }
 
-.results-row {
-  justify-content: space-between;
+/* LABELS */
+.dropdown label,
+.section label{
+  display:block;
+  color: var(--muted);
+  font-size:.82rem;
+  margin-bottom:.35rem;
 }
 
-.button-row {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
+/* INPUTS & SELECTS */
+input, select{
+  width:100%;
+  appearance:none;
+  background: var(--soft);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:.9rem .9rem;
+  font-size:.95rem;
+  color:#0b1f2a;
+  box-shadow: inset 0 1px 0 #fff;
+  transition: .2s ease;
+}
+input::placeholder{ color:#b7c6cf; }
+input:focus, select:focus{
+  outline:none;
+  border-color:#c6d9e6;
+  box-shadow:0 0 0 3px rgba(11,61,92,.08);
+  background:#fff;
 }
 
-.btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
+/* SELECT arrow */
+select{
+  background-image: linear-gradient(45deg, transparent 50%, #7a93a3 50%),
+                    linear-gradient(135deg, #7a93a3 50%, transparent 50%),
+                    linear-gradient(to right, transparent, transparent);
+  background-position: calc(100% - 18px) calc(1.1rem),
+                       calc(100% - 13px) calc(1.1rem),
+                       calc(100% - 2.25rem) 0.6rem;
+  background-size: 6px 6px, 6px 6px, 1px 1.6rem;
+  background-repeat: no-repeat;
+  padding-right: 2.5rem;
 }
 
-.btn.primary {
-  background-color: #0b3d5c;
-  color: white;
+/* CHECKBOX tradicional */
+.section input[type="checkbox"]{
+  width:auto;
+  accent-color: var(--primary);
+  margin-right:.45rem;
+  appearance: checkbox;
+  -webkit-appearance: checkbox;
+  transform: none;
 }
 
-.btn.secondary {
-  background-color: #d5ecfb;
-  color: #0b3d5c;
+/* RESULTS */
+.section.results{
+  padding-top:1rem;
+}
+.results-row{
+  justify-content:space-between;
+  gap:2rem;
+}
+.results-row p{
+  font-size:1rem;
+  margin:.25rem 0;
+}
+.results-row strong{
+  color: var(--primary);
+}
+
+/* BUTTONS */
+.button-row{
+  display:flex;
+  justify-content:flex-end;
+  gap:1rem;
+  margin-top:.25rem;
+}
+.btn{
+  padding:.95rem 1.6rem;
+  border:none;
+  border-radius:999px;
+  font-weight:700;
+  cursor:pointer;
+  transition: .2s ease;
+}
+.btn.primary{
+  background: var(--primary);
+  color:#fff;
+}
+.btn.primary:hover{ background: var(--primary-600); }
+.btn.secondary{
+  background:#d5ecfb;
+  color: var(--primary);
+}
+.btn:hover{ transform: translateY(-1px); }
+
+/* Tiny tweak for the three inputs in la fila (Wall/Descuento) */
+.section .row input[type="number"]{
+  max-width: 260px;
+}
+
+/* Responsive */
+@media (max-width: 980px){
+  .row > *{ min-width:200px; }
 }
