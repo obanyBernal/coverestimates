@@ -2,9 +2,8 @@ import React, { useMemo, useState } from "react";
 import "../css/PriceCalculator.css";
 import { printPage } from "../utils/PrintUtils";
 import { calcularPrecio } from "../utils/priceCalculator";
-// lógica nueva se conectará después
 
-import { meshStandard, solidStandard } from "./PoolInputs";
+import { meshStandard, solidStandard } from "../components/PoolInputs";
 
 const uniq = (arr) => Array.from(new Set(arr));
 
@@ -64,15 +63,17 @@ const PriceCalculator = () => {
   const { measures: solidMeasures, categories: solidCategories } =
     useSolidOptions();
 
-  // CUSTOM (card pequeño)
+  // CUSTOM
+  const [customMeshEnabled, setCustomMeshEnabled] = useState(false);
+  const [customSolidEnabled, setCustomSolidEnabled] = useState(false);
   const [customSqft, setCustomSqft] = useState("");
+  const [customGrid, setCustomGrid] = useState("5x5"); // "5x5" | "3x3"
 
-  // Controles globales (fuera del card de Custom)
-  const [padding, setPadding] = useState(""); // lo usaremos en la lógica después
+  // global
+  const [padding, setPadding] = useState("");
   const [wall, setWall] = useState("");
-  const [discount, setDiscount] = useState(""); // %
+  const [discount, setDiscount] = useState("");
 
-  // Resultados placeholder
   const [results, setResults] = useState({
     meshRetail: 0,
     meshDealer: 0,
@@ -80,27 +81,105 @@ const PriceCalculator = () => {
     solidDealer: 0,
   });
 
-  const handleCalculate = () => {
-    // Determinar el modo
-    const mode = customSqft ? "custom" : "standard";
+  // 🔒 Standard activo si hay selects llenos
+  // ✅ cuenta selects y checkboxes de Standard
+  const hasStandardActive = Boolean(
+    meshEnabled ||
+      solidEnabled ||
+      meshMeasure ||
+      meshCategory ||
+      solidMeasure ||
+      solidCategory
+  );
+  const customDisabled = hasStandardActive;
 
+  // Intención de Custom = al menos un checkbox de Custom
+  const wantsCustom = customMeshEnabled || customSolidEnabled;
+
+  const handleCalculate = () => {
+    // Si el usuario quiere Custom pero hay algo activo en Standard → conflicto
+    if (wantsCustom && hasStandardActive) {
+      alert(
+        "No puedes calcular Custom mientras haya opciones activas en Standard. Limpia o desmarca la sección Standard."
+      );
+      return;
+    }
+
+    // Si quiere Custom, valida TODO aunque falte sqft (para que avise)
+    if (wantsCustom && !hasStandardActive) {
+      if (!customMeshEnabled && !customSolidEnabled) {
+        alert("Debe seleccionar al menos Mesh o Solid en la sección Custom.");
+        return;
+      }
+      if (!customGrid) {
+        alert(
+          "Debe seleccionar el tipo de malla (5x5 o 3x3) en la sección Custom."
+        );
+        return;
+      }
+      if (!customSqft || Number(customSqft) <= 0) {
+        alert("Debe ingresar un valor válido de Pool Size (sqft) para Custom.");
+        return;
+      }
+
+      // ✅ Modo CUSTOM
+      const result = calcularPrecio({
+        // standard (se envían igual, pero no afectan el cálculo en modo custom)
+        meshEnabled,
+        meshMeasure,
+        meshCategory,
+        solidEnabled,
+        solidMeasure,
+        solidCategory,
+
+        // custom
+        customMeshEnabled,
+        customSolidEnabled,
+        customSqft,
+        customGrid,
+
+        // global
+        padding,
+        wall,
+        discount,
+
+        // modo
+        mode: "custom",
+      });
+      setResults(result);
+      return;
+    }
+
+    // ✅ Modo STANDARD (no quiere Custom)
     const result = calcularPrecio({
+      // standard
       meshEnabled,
       meshMeasure,
       meshCategory,
       solidEnabled,
       solidMeasure,
       solidCategory,
+
+      // custom (se ignoran en modo standard)
+      customMeshEnabled,
+      customSolidEnabled,
       customSqft,
+      customGrid,
+
+      // global
       padding,
       wall,
       discount,
-      mode,
-    });
 
+      mode: "standard",
+    });
     setResults(result);
   };
-  const customDisabled = meshEnabled || solidEnabled;
+
+  // Checkboxes 5x5/3x3 con comportamiento mutuamente excluyente
+  const toggleGrid = (value) => {
+    setCustomGrid((prev) => (prev === value ? "" : value));
+  };
 
   return (
     <div className="price-calculator">
@@ -129,11 +208,11 @@ const PriceCalculator = () => {
         </div>
       </section>
 
-      {/* Cálculo de precios Standard */}
+      {/* STANDARD */}
       <section className="section">
         <h3>Calculo de precios Standard</h3>
 
-        {/* MESH */}
+        {/* Mesh */}
         <div className="row" style={{ alignItems: "center" }}>
           <label
             style={{
@@ -184,7 +263,7 @@ const PriceCalculator = () => {
           </div>
         </div>
 
-        {/* SOLID */}
+        {/* Solid */}
         <div
           className="row"
           style={{ alignItems: "center", marginTop: "1rem" }}
@@ -239,13 +318,41 @@ const PriceCalculator = () => {
         </div>
       </section>
 
-      {/* Custom (card pequeño) + controles globales fuera */}
+      {/* CUSTOM + controles globales */}
       <section
         className="section"
         style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}
       >
+        {/* Card Custom */}
         <div className="section" style={{ margin: 0 }}>
           <h3>Calculo de precios Custom</h3>
+
+          {/* Checkboxes de Custom: Mesh/Solid separados del Standard */}
+          <div className="row" style={{ alignItems: "center" }}>
+            <label
+              style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
+            >
+              <input
+                type="checkbox"
+                checked={customMeshEnabled}
+                onChange={() => setCustomMeshEnabled((v) => !v)}
+                disabled={customDisabled}
+              />
+              Mesh
+            </label>
+            <label
+              style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
+            >
+              <input
+                type="checkbox"
+                checked={customSolidEnabled}
+                onChange={() => setCustomSolidEnabled((v) => !v)}
+                disabled={customDisabled}
+              />
+              Solid
+            </label>
+          </div>
+
           <div className="row">
             <div>
               <label>Pool Size (sqft)</label>
@@ -258,8 +365,40 @@ const PriceCalculator = () => {
               />
             </div>
           </div>
+
+          {/* Selector 5x5 / 3x3 como checkboxes (mutuamente excluyentes) */}
+          <div className="row" style={{ alignItems: "center" }}>
+            <label style={{ flex: "0 0 100%", color: "#6e8796" }}>
+              Tipo de malla
+            </label>
+
+            <label
+              style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
+            >
+              <input
+                type="checkbox"
+                checked={customGrid === "5x5"}
+                onChange={() => toggleGrid("5x5")}
+                disabled={customDisabled}
+              />
+              5x5
+            </label>
+
+            <label
+              style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
+            >
+              <input
+                type="checkbox"
+                checked={customGrid === "3x3"}
+                onChange={() => toggleGrid("3x3")}
+                disabled={customDisabled}
+              />
+              3x3
+            </label>
+          </div>
         </div>
 
+        {/* Controles globales */}
         <div className="row" style={{ alignItems: "end" }}>
           <div>
             <label>Padding</label>
