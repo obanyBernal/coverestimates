@@ -54,10 +54,14 @@ const canvas = await html2canvas(targetRef.current, {
     // Calcular áreas útiles
     const contentWmm = pageW - mm.margin * 2;
     const usableHmm = pageH - mm.headerH - mm.footerH;
+  
 
     // Relación px/mm para cortes por página
     const pxPerMm = canvas.width / contentWmm;
     const pageSlicePx = Math.floor(usableHmm * pxPerMm);
+
+     // Umbral: si el sobrante es menor a X mm, no crear una nueva página
+    const MIN_REMAINDER_MM = 3;
 
     // Prepara logo como DataURL
     const logoDataUrl = await urlToDataURL(logoUrl);
@@ -136,7 +140,7 @@ const canvas = await html2canvas(targetRef.current, {
 
       pageIndex++;
     }
-
+    
     pdf.save(filename);
   };
 

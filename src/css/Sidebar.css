@@ -1,44 +1,147 @@
+/* ===== Layout del shell (sidebar + contenido) ===== */
+.app-shell {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  column-gap: 24px;              /* 👈 mantiene un margen entre sidebar y contenido */
+  min-height: 100vh;
+  transition: grid-template-columns 0.25s ease;
+}
+
+.app-shell.sidebar-hidden {
+  grid-template-columns: 0 1fr;
+}
+
+/* ===== Sidebar ===== */
 .sidebar {
-  position: sticky;     /* 📌 se mantiene fija al hacer scroll */
-  top: 0;               /* anclaje */
-  height: 100vh;        /* ocupa todo el alto */
-  flex: 0 0 250px;      /* ancho fijo (coincide con width) */
-  width: 250px;         /* tu valor actual */
-  background-color: #0b3d5c;
-  color: white;
-  padding: 1.5rem;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 260px;
+  background-color: #0b3d5c; /* azul profundo */
+  color: #d0efff;            /* celeste claro del texto */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  overflow-y: auto;     /* si el menú crece, scroll solo dentro del sidebar */
+  overflow: hidden;
+  border-right: 1px solid rgba(255,255,255,0.08);
 }
 
+/* Header del sidebar (título y powered) */
+.sidebar-header {
+  padding: 20px 24px;
+  background: rgba(255,255,255,0.06); /* franja superior más clara */
+  position: relative;
+}
 
-.sidebar-title {
-  font-size: 1.2rem;
-  font-weight: bold;
+.brand-title {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.brand-powered {
+  position: absolute;
+  right: 16px;
+  top: 12px;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* Navegación */
+.sidebar-nav {
+  padding: 16px 16px 0 16px;
 }
 
 .sidebar-nav ul {
   list-style: none;
+  margin: 0;
   padding: 0;
-  margin: 2rem 0;
 }
 
-.sidebar-nav li {
-  margin-bottom: 1rem;
-  cursor: pointer;
+.sidebar-nav li + li {
+  margin-top: 18px;
 }
 
-.sidebar-user {
+.sidebar-link {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  background: transparent;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.sidebar-link:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.sidebar-icon {
+  width: 24px;
+  height: 24px;
+  opacity: 0.9; /* luce similar al mock */
+}
+
+/* Footer / Usuario */
+.sidebar-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 24px;
+  background: rgba(255,255,255,0.06); /* franja inferior */
 }
 
 .user-avatar {
-  width: 48px;
-  height: 48px;
-  background-color: #ccc;
-  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: #7da0b4; /* placeholder */
+  opacity: 0.8;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.user-role {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+/* ===== Contenido principal ===== */
+.app-content {
+  padding: 16px;
+  display: flex;
+  justify-content: center; /* Centra el contenido hijo */
+}
+.app-content > * {
+  flex: 1;
+  max-width: 90%; /* ocupa el 90% del viewport */
+}
+
+/* Botón flotante cuando el sidebar está oculto */
+.fab-open {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
 }

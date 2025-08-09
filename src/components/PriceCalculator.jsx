@@ -718,7 +718,7 @@ const PriceCalculator = () => {
           </div>
         </div>
       </section>
-      {/* Botones */}
+      {/*  solo pdf */}
       <div
         aria-hidden="true"
         style={{
@@ -730,31 +730,30 @@ const PriceCalculator = () => {
         }}
       >
         <div ref={pdfRef} className="pdf-sheet">
-          <div className="pdf-row" style={{ alignItems: "baseline" }}>
-            <h3 className="pdf-title">Estimado</h3>
-            <div
-              className="pdf-subtle"
-              style={{ marginLeft: "auto", textAlign: "right" }}
-            >
-              <div>{new Date().toLocaleDateString()}</div>
-              <div>{new Date().toLocaleTimeString()}</div>
-            </div>
-          </div>
-          <div className="pdf-sep"></div>
-
-          <div className="pdf-row">
-            <div className="pdf-col pdf-box">
-              <div className="pdf-kv">
+          <div ref={pdfRef} className="pdf-sheet">
+            {/* BLOQUE 1 */}
+            <div className="pdf-section pdf-section--primary pdf-section--compact">
+              <h3 className="pdf-title pdf-title-lg">Estimado</h3>
+              <div className="pdf-grid-2x2 pdf-kv pdf-kv-lg">
                 <div className="pdf-k">Dealer:</div>
                 <div className="pdf-v">{dealer || "—"}</div>
+
                 <div className="pdf-k">JOB:</div>
                 <div className="pdf-v">{job || "—"}</div>
+
                 <div className="pdf-k">Malla:</div>
                 <div className="pdf-v">{customGrid || "—"}</div>
+
+                <div className="pdf-k">Fecha / Hora:</div>
+                <div className="pdf-v">
+                  {new Date().toLocaleDateString()}{" "}
+                  {new Date().toLocaleTimeString()}
+                </div>
               </div>
             </div>
 
-            <div className="pdf-col pdf-box">
+            {/* BLOQUE 2 */}
+            <div className="pdf-section">
               {(() => {
                 const wantsCustom = customMeshEnabled || customSolidEnabled;
                 const hasStandardActive = Boolean(
@@ -792,7 +791,7 @@ const PriceCalculator = () => {
                 }
 
                 return (
-                  <div className="pdf-kv">
+                  <div className="pdf-kv pdf-kv-lg">
                     <div className="pdf-k">Ps:</div>
                     <div className="pdf-v">{psLabel}</div>
                     <div className="pdf-k">CS:</div>
@@ -805,21 +804,14 @@ const PriceCalculator = () => {
                 );
               })()}
             </div>
-          </div>
 
-          <div className="pdf-spacer"></div>
-
-          <div className="pdf-row">
-            <div className="pdf-col pdf-box">
-              <div className="pdf-kv">
+            {/* BLOQUE 3 */}
+            <div className="pdf-section">
+              <div className="pdf-kv pdf-kv-lg">
                 <div className="pdf-k">Mesh Retail:</div>
                 <div className="pdf-v">{fmtMoney(results.meshRetail)}</div>
                 <div className="pdf-k">Solid Retail:</div>
                 <div className="pdf-v">{fmtMoney(results.solidRetail)}</div>
-              </div>
-            </div>
-            <div className="pdf-col pdf-box">
-              <div className="pdf-kv">
                 <div className="pdf-k">Mesh Dealer:</div>
                 <div className="pdf-v">{fmtMoney(results.meshDealer)}</div>
                 <div className="pdf-k">Solid Dealer:</div>

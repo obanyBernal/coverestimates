@@ -77,4 +77,28 @@
   padding: 12px;
   margin-bottom: 16px;
 }
+.pdf-section--compact {
+  margin-bottom: 0;
+}
 
+.pdf-grid-2x2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 24px;
+}
+
+.pdf-kv-lg .pdf-k {
+  font-size: 13px;
+}
+
+.pdf-kv-lg .pdf-v {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Un poco más de presencia visual al primer bloque */
+.pdf-section--primary {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px 16px;
+}

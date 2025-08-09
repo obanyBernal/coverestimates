@@ -10,7 +10,11 @@
 
 .price-calculator{
   background: transparent;
-  padding: 0;
+  padding: 0 16px;     /* gutter interno constante */
+  max-width: 1160px;   /* ancho legible */
+  margin: 0 auto;      /* centra siempre, haya o no sidebar */
+  width: 100%;
+  align-items: center;
 }
 
 /* CARD/SECTION */
@@ -218,3 +222,7 @@ select{
 @media (max-width: 980px){
   .row > *{ min-width:200px; }
 }
+@media (min-width: 1440px){
+  .price-calculator { max-width: 1280px; }
+}
+

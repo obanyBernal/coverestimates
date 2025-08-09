@@ -1,24 +1,64 @@
+/* Padre en grid con separación estable */
 .dashboard-container {
-  display: flex;
-  height: 100vh;           /* ya lo tenías */
-  font-family: sans-serif; /* ya lo tenías */
-  overflow: hidden;        /* 🔒 evita scroll del body */
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  column-gap: 24px;
+  min-height: 100vh;
+  /* 👇 quita el overlay que tapaba sombras/contenido */
+  overflow: visible;
 }
 
+/* Cuando ocultas el sidebar */
+.dashboard-container.sidebar-hidden {
+  grid-template-columns: 0 minmax(0, 1fr);
+}
+
+/* Columna de contenido */
 .dashboard-main {
-  flex: 1;
   display: flex;
-  padding-top: .5rem;
   flex-direction: column;
-  padding: 2rem;
-  background-color: #f4f4f4;
-  height: 100vh;           /* 🔑 ocupa alto completo */
-  overflow-y: auto;        /* 🧭 scroll SOLO aquí */
+  padding: 24px;
+  background: #f4f4f4;
+  min-width: 0;           /* evita desbordes en grid */
+  position: relative;     /* capa base del contenido */
+  z-index: 0;
 }
 
+.dashboard-main > * {
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;              /* centrado dentro de la columna */
+}
+
+/* Footer */
 .dashboard-footer {
-  text-align: center;
   margin-top: auto;
-  font-size: 0.8rem;
+  text-align: center;
+  font-size: .8rem;
   color: #666;
 }
+
+/* Botón flotante para reabrir el sidebar */
+.fab-open {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0,0,0,.2);
+}
+
+/* Cuando el sidebar esté oculto, centra el contenido y limita el ancho */
+.dashboard-container.sidebar-hidden .dashboard-main {
+  display: flex;                /* centrado horizontal con flex */
+  justify-content: center;
+}
+
+.dashboard-container.sidebar-hidden .dashboard-main > * {
+  width: 90vw;                  /* ocupa el 90% del viewport */
+  max-width: 1280px;            /* no más ancho que esto */
+}
+
