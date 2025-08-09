@@ -119,6 +119,70 @@ select{
   color: var(--primary);
 }
 
+.results-card {
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(16,24,40,.06), 0 2px 8px rgba(16,24,40,.04);
+  padding: 16px 20px;
+}
+
+.res-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.res-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 32px;
+  margin-top: 8px;
+}
+
+.res-block {
+  border-top: 1px solid #E6EEF5;
+  border-bottom: 1px solid #E6EEF5;
+  padding: 10px 0;
+  margin: 8px 0;
+}
+
+.res-rows {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: 8px 24px;
+}
+
+.res-line { 
+  display: flex; 
+  gap: 8px; 
+  align-items: baseline; 
+}
+
+.res-key { 
+  color: #0b4365; 
+  font-weight: 700; 
+  text-transform: uppercase; 
+  letter-spacing: .3px;
+}
+
+.res-val { 
+  color: #0b0f14; 
+  font-weight: 600; 
+}
+
+.res-pill {
+  justify-self: end;
+  background: #edf6ff;
+  color: #0b4365;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: .4px;
+}
+
+
 /* BUTTONS */
 .button-row{
   display:flex;
