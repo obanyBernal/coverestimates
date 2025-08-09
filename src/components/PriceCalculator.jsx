@@ -1,10 +1,10 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useRef } from "react"; // ⭐ añadí useRef
 import "../css/PriceCalculator.css";
-// ❌ removido: import { printPage } from "../utils/PrintUtils";
+import "../css/ExportPDFButton.css";
 import { calcularPrecio } from "../utils/priceCalculator";
 import { parseAreaExpression } from "../utils/areaParser";
-
 import { meshStandard, solidStandard } from "../components/PoolInputs";
+import ExportPDFButton from "../components/ExportPDFButton"; // ⭐ import botón
 
 // 👉 helpers de formato
 const fmtNum = (n) =>
@@ -48,16 +48,13 @@ const useMeshOptions = () => {
 // Genera expresión sumando 2ft a cada dimensión de AxB
 const growExpr = (expr, growBy = 2) => {
   if (!expr || !expr.trim()) return { expr: "—", total: 0 };
-
   const multSep = /\s*[x×*]\s*/i;
   const safeNum = (s) => {
     const n = Number(String(s).trim().replace(",", "."));
     return Number.isFinite(n) ? n : NaN;
   };
-
   let total = 0;
   let csExpr = expr.trim();
-
   if (multSep.test(expr)) {
     const [a, b] = expr.split(multSep);
     const n1 = safeNum(a);
@@ -69,24 +66,20 @@ const growExpr = (expr, growBy = 2) => {
       total = r1 * r2;
     }
   }
-
   return { expr: csExpr, total: Math.round(total) };
 };
 
-// Reduce 2ft a cada dimensión en términos AxB y retorna { expr, total }
+// Reduce 2ft a cada dimensión en términos AxB
 const shrinkExpr = (expr, shrinkBy = 2) => {
   if (!expr || !expr.trim()) return { expr: "—", total: 0 };
-
   const termSep = /\s*\+\s*/;
   const multSep = /\s*[x×*]\s*/i;
   const safeNum = (s) => {
     const n = Number(String(s).trim().replace(",", "."));
     return Number.isFinite(n) ? n : NaN;
   };
-
   let psTerms = [];
   let total = 0;
-
   for (const rawTerm of expr.split(termSep).filter(Boolean)) {
     const term = rawTerm.trim();
     if (multSep.test(term)) {
@@ -99,7 +92,7 @@ const shrinkExpr = (expr, shrinkBy = 2) => {
         psTerms.push(`${r1}x${r2}`);
         total += r1 * r2;
       } else {
-        psTerms.push(term); // conserva el término si no parsea
+        psTerms.push(term);
       }
     } else {
       psTerms.push(term);
@@ -107,7 +100,6 @@ const shrinkExpr = (expr, shrinkBy = 2) => {
       if (Number.isFinite(n)) total += n;
     }
   }
-
   return { expr: psTerms.join(" + "), total: Math.round(total) };
 };
 
@@ -130,10 +122,13 @@ const useSolidOptions = () => {
 };
 
 const PriceCalculator = () => {
+  // ⭐ ref del área a exportar
+  const pdfRef = useRef(null);
+
   // Cliente
   const [dealer, setDealer] = useState("");
   const [job, setJob] = useState("");
-  const [address, setAddress] = useState("");
+  //const [address, setAddress] = useState("");
 
   // STANDARD – Mesh
   const [meshEnabled, setMeshEnabled] = useState(false);
@@ -152,10 +147,9 @@ const PriceCalculator = () => {
   // CUSTOM
   const [customMeshEnabled, setCustomMeshEnabled] = useState(false);
   const [customSolidEnabled, setCustomSolidEnabled] = useState(false);
-  const [customExpr, setCustomExpr] = useState(""); // expresión tipo "24x45 + 10x25"
-  const [customGrid, setCustomGrid] = useState("5x5"); // "5x5" | "3x3"
+  const [customExpr, setCustomExpr] = useState("");
+  const [customGrid, setCustomGrid] = useState("5x5");
 
-  // Parseo de expresión -> sqft + error (label visual)
   const { sqft: parsedSqft, error: exprError } = useMemo(() => {
     const { value, error } = parseAreaExpression(customExpr);
     return { sqft: value, error };
@@ -173,11 +167,9 @@ const PriceCalculator = () => {
     solidDealer: 0,
   });
 
-  // === UI: deshabilitar custom por material si su standard está activo
   const customMeshDisabled = meshEnabled;
   const customSolidDisabled = solidEnabled;
 
-  // Checkboxes 5x5/3x3 mutuamente excluyentes
   const toggleGrid = (value) => {
     setCustomGrid((prev) => (prev === value ? "" : value));
   };
@@ -186,28 +178,20 @@ const PriceCalculator = () => {
   const handleClear = () => {
     setDealer("");
     setJob("");
-    setAddress("");
-
-    // Standard
+    //setAddress("");
     setMeshEnabled(false);
     setMeshMeasure("");
     setMeshCategory("");
     setSolidEnabled(false);
     setSolidMeasure("");
     setSolidCategory("");
-
-    // Custom
     setCustomMeshEnabled(false);
     setCustomSolidEnabled(false);
     setCustomExpr("");
     setCustomGrid("5x5");
-
-    // Global
     setPadding("");
     setWall("");
     setDiscount("");
-
-    // Resultados
     setResults({
       meshRetail: 0,
       meshDealer: 0,
@@ -216,17 +200,19 @@ const PriceCalculator = () => {
     });
   };
 
-  // ======================
-  // 🚀 handleCalculate con mezcla por material
-  // ======================
+  // 🚀 handleCalculate
   const handleCalculate = () => {
-    // Derivar modos por material
-    const meshMode =
-      customMeshEnabled ? "custom" : meshEnabled ? "standard" : "off";
-    const solidMode =
-      customSolidEnabled ? "custom" : solidEnabled ? "standard" : "off";
+    const meshMode = customMeshEnabled
+      ? "custom"
+      : meshEnabled
+      ? "standard"
+      : "off";
+    const solidMode = customSolidEnabled
+      ? "custom"
+      : solidEnabled
+      ? "standard"
+      : "off";
 
-    // Si todo está apagado
     if (meshMode === "off" && solidMode === "off") {
       window.alert(
         "Seleccione al menos una opción en Mesh o Solid (Standard o Custom)."
@@ -234,7 +220,6 @@ const PriceCalculator = () => {
       return;
     }
 
-    // === Validaciones por material ===
     const needsCustomCheck = (mode) => mode === "custom";
     if (needsCustomCheck(meshMode) || needsCustomCheck(solidMode)) {
       if (!customGrid) {
@@ -268,7 +253,6 @@ const PriceCalculator = () => {
       }
     }
 
-    // ==== Cálculo independiente por material ====
     const zero = {
       meshRetail: 0,
       meshDealer: 0,
@@ -357,14 +341,12 @@ const PriceCalculator = () => {
     const meshRes = calcMeshPart();
     const solidRes = calcSolidPart();
 
-    const combined = {
+    setResults({
       meshRetail: meshRes.meshRetail ?? 0,
       meshDealer: meshRes.meshDealer ?? 0,
       solidRetail: solidRes.solidRetail ?? 0,
       solidDealer: solidRes.solidDealer ?? 0,
-    };
-
-    setResults(combined);
+    });
   };
 
   return (
@@ -385,15 +367,14 @@ const PriceCalculator = () => {
             value={job}
             onChange={(e) => setJob(e.target.value)}
           />
-          <input
+          {/*<input
             type="text"
             placeholder="Ingrese dirección"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-          />
+          />*/}
         </div>
       </section>
-
       {/* STANDARD */}
       <section className="section">
         <h3>Calculo de precios Standard</h3>
@@ -503,7 +484,6 @@ const PriceCalculator = () => {
           </div>
         </div>
       </section>
-
       {/* CUSTOM + controles globales */}
       <section
         className="section"
@@ -513,7 +493,6 @@ const PriceCalculator = () => {
         <div className="section" style={{ margin: 0 }}>
           <h3>Calculo de precios Custom</h3>
 
-          {/* Checkboxes de Custom: Mesh/Solid separados del Standard */}
           <div className="row" style={{ alignItems: "center" }}>
             <label
               style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
@@ -539,7 +518,7 @@ const PriceCalculator = () => {
             </label>
           </div>
 
-          {/* 🔢 Expresión + label resultado */}
+          {/* Expresión */}
           <div className="row" style={{ alignItems: "center", gap: 8 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div>
@@ -552,7 +531,6 @@ const PriceCalculator = () => {
                   disabled={false}
                 />
               </div>
-              {/* Label solo visual con el total */}
               <span className="result-label" style={{ whiteSpace: "nowrap" }}>
                 = {Number.isFinite(parsedSqft) ? `${parsedSqft} ft²` : "—"}
               </span>
@@ -573,7 +551,7 @@ const PriceCalculator = () => {
             )}
           </div>
 
-          {/* Selector 5x5 / 3x3 como checkboxes (mutuamente excluyentes) */}
+          {/* 5x5 / 3x3 */}
           <div className="row" style={{ alignItems: "center" }}>
             <label style={{ flex: "0 0 100%", color: "#6e8796" }}>
               Tipo de malla
@@ -636,12 +614,8 @@ const PriceCalculator = () => {
           </div>
         </div>
       </section>
-
-      {/* Resultados */}
-      <section className="section results-card">
-        <h3>Resultados</h3>
-
-        {/* Encabezado con datos de cliente */}
+      <section className="section results-card" style={{ background: "#fff" }}>
+        <h3>Estimado</h3>
         <div className="res-grid">
           <div className="res-col">
             <div className="res-line">
@@ -654,16 +628,12 @@ const PriceCalculator = () => {
             </div>
           </div>
           <div className="res-col">
-            {/* Grid (5x5 / 3x3) */}
             <div className="res-pill">{customGrid || "—"}</div>
           </div>
         </div>
 
-        {/* Bloque medidas/expresiones */}
         <div className="res-block">
-          {/* PS / CS / Wall / Padding */}
           {(() => {
-            // Detectamos si está en intención Custom (igual que en la lógica anterior de UI)
             const wantsCustom = customMeshEnabled || customSolidEnabled;
             const hasStandardActive = Boolean(
               meshEnabled ||
@@ -675,22 +645,18 @@ const PriceCalculator = () => {
             );
             const isCustomMode = wantsCustom && !hasStandardActive;
 
-            // PS / CS (solo visual)
             let psLabel = "—";
             let csLabel = "—";
 
             if (isCustomMode) {
-              // CUSTOM: CS = expr original (= total); PS = expr con -2ft por dimensión (= total)
               const cs = parsedSqft;
               const { expr: psExpr, total: psTotal } = shrinkExpr(
                 customExpr,
                 2
               );
-
-              csLabel = labelExpr(customExpr, cs); // "45x22 + 12x6 = 1,062"
-              psLabel = `${psExpr} = ${fmtNum(psTotal)}`; // "43x20 + 10x4 = 966"
+              csLabel = labelExpr(customExpr, cs);
+              psLabel = `${psExpr} = ${fmtNum(psTotal)}`;
             } else {
-              // STANDARD: PS = medida seleccionada (= total); CS = PS con +2ft por dimensión (= total)
               const chosenMeasure = meshMeasure || solidMeasure || "";
               if (chosenMeasure) {
                 const psTotal = parseAreaExpression(chosenMeasure).value;
@@ -698,13 +664,11 @@ const PriceCalculator = () => {
                   chosenMeasure,
                   2
                 );
-
-                psLabel = `${chosenMeasure} = ${fmtNum(psTotal)}`; // "8x8 = 64"
-                csLabel = `${csExpr} = ${fmtNum(csTotal)}`; // "10x10 = 100"
+                psLabel = `${chosenMeasure} = ${fmtNum(psTotal)}`;
+                csLabel = `${csExpr} = ${fmtNum(csTotal)}`;
               }
             }
 
-            // Wall / Padding: de momento son numéricos, mostramos sólo valor
             const wallLabel = fmtNum(wall || 0);
             const paddingLabel = fmtNum(padding || 0);
 
@@ -731,7 +695,6 @@ const PriceCalculator = () => {
           })()}
         </div>
 
-        {/* Precios */}
         <div className="res-columns">
           <div className="res-col">
             <div className="res-line">
@@ -755,16 +718,140 @@ const PriceCalculator = () => {
           </div>
         </div>
       </section>
-
       {/* Botones */}
-      <div className="button-row">
-        <button onClick={handleCalculate} className="btn primary">
-          Calcular
-        </button>
+      <div
+        aria-hidden="true"
+        style={{
+          position: "fixed",
+          left: "-10000px",
+          top: 0,
+          width: "720px",
+          zIndex: -1,
+        }}
+      >
+        <div ref={pdfRef} className="pdf-sheet">
+          <div className="pdf-row" style={{ alignItems: "baseline" }}>
+            <h3 className="pdf-title">Estimado</h3>
+            <div
+              className="pdf-subtle"
+              style={{ marginLeft: "auto", textAlign: "right" }}
+            >
+              <div>{new Date().toLocaleDateString()}</div>
+              <div>{new Date().toLocaleTimeString()}</div>
+            </div>
+          </div>
+          <div className="pdf-sep"></div>
+
+          <div className="pdf-row">
+            <div className="pdf-col pdf-box">
+              <div className="pdf-kv">
+                <div className="pdf-k">Dealer:</div>
+                <div className="pdf-v">{dealer || "—"}</div>
+                <div className="pdf-k">JOB:</div>
+                <div className="pdf-v">{job || "—"}</div>
+                <div className="pdf-k">Malla:</div>
+                <div className="pdf-v">{customGrid || "—"}</div>
+              </div>
+            </div>
+
+            <div className="pdf-col pdf-box">
+              {(() => {
+                const wantsCustom = customMeshEnabled || customSolidEnabled;
+                const hasStandardActive = Boolean(
+                  meshEnabled ||
+                    solidEnabled ||
+                    meshMeasure ||
+                    meshCategory ||
+                    solidMeasure ||
+                    solidCategory
+                );
+                const isCustomMode = wantsCustom && !hasStandardActive;
+
+                let psLabel = "—";
+                let csLabel = "—";
+
+                if (isCustomMode) {
+                  const cs = parsedSqft;
+                  const { expr: psExpr, total: psTotal } = shrinkExpr(
+                    customExpr,
+                    2
+                  );
+                  csLabel = labelExpr(customExpr, cs);
+                  psLabel = `${psExpr} = ${fmtNum(psTotal)}`;
+                } else {
+                  const chosenMeasure = meshMeasure || solidMeasure || "";
+                  if (chosenMeasure) {
+                    const psTotal = parseAreaExpression(chosenMeasure).value;
+                    const { expr: csExpr, total: csTotal } = growExpr(
+                      chosenMeasure,
+                      2
+                    );
+                    psLabel = `${chosenMeasure} = ${fmtNum(psTotal)}`;
+                    csLabel = `${csExpr} = ${fmtNum(csTotal)}`;
+                  }
+                }
+
+                return (
+                  <div className="pdf-kv">
+                    <div className="pdf-k">Ps:</div>
+                    <div className="pdf-v">{psLabel}</div>
+                    <div className="pdf-k">CS:</div>
+                    <div className="pdf-v">{csLabel}</div>
+                    <div className="pdf-k">Wall:</div>
+                    <div className="pdf-v">{fmtNum(wall || 0)}</div>
+                    <div className="pdf-k">Padding:</div>
+                    <div className="pdf-v">{fmtNum(padding || 0)}</div>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+
+          <div className="pdf-spacer"></div>
+
+          <div className="pdf-row">
+            <div className="pdf-col pdf-box">
+              <div className="pdf-kv">
+                <div className="pdf-k">Mesh Retail:</div>
+                <div className="pdf-v">{fmtMoney(results.meshRetail)}</div>
+                <div className="pdf-k">Solid Retail:</div>
+                <div className="pdf-v">{fmtMoney(results.solidRetail)}</div>
+              </div>
+            </div>
+            <div className="pdf-col pdf-box">
+              <div className="pdf-kv">
+                <div className="pdf-k">Mesh Dealer:</div>
+                <div className="pdf-v">{fmtMoney(results.meshDealer)}</div>
+                <div className="pdf-k">Solid Dealer:</div>
+                <div className="pdf-v">{fmtMoney(results.solidDealer)}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        className="button-row"
+        style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}
+      >
         <button onClick={handleClear} className="btn">
           Limpiar
         </button>
-        <button className="btn secondary">Exportar PDF</button>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <button onClick={handleCalculate} className="btn primary">
+            Calcular
+          </button>
+          <ExportPDFButton
+            targetRef={pdfRef}
+            filename="detalles_precio.pdf"
+            companyLines={[
+              "55 Knickerbocker Ave. Bohemia, NY 11716",
+              "+1 (631) 704-0010",
+              "lisafetypoolcover@gmail.com",
+            ]}
+            btnLabel="Exportar PDF"
+            className="btn secondary"
+          />
+        </div>
       </div>
     </div>
   );

@@ -1,0 +1,80 @@
+/* Hoja PDF: tamaño A4 zona útil */
+.pdf-sheet {
+  width: 720px; /* ~190 mm en px @96dpi */
+  min-height: 950px; /* ~251 mm */
+  margin: 0 auto;
+  background: #fff;
+  box-sizing: border-box;
+  padding: 16px 24px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Distribución general */
+/* Distribución general vertical */
+.pdf-row {
+  display: block; /* en PDF, cada sección una debajo de otra */
+  margin-bottom: 16px;
+}
+
+.pdf-col {
+  flex: 1;
+}
+.pdf-sep {
+  height: 1px;
+  background: #e5e7eb;
+}
+.pdf-spacer {
+  flex: 1;
+}
+
+/* Tipografía y títulos */
+.pdf-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+.pdf-subtle {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+/* Key/Value para detalles */
+.pdf-kv {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 6px 12px;
+}
+.pdf-k {
+  color: #374151;
+  font-weight: 600;
+}
+.pdf-v {
+  color: #111827;
+}
+
+/* Cajas con borde */
+.pdf-box {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+/* Contenedor invisible que SÍ se renderiza en DOM (html2canvas lo ve) */
+.pdf-hidden-host {
+  position: fixed;
+  left: -10000px; /* muy fuera de la pantalla */
+  top: 0;
+  width: 720px;   /* coincide con .pdf-sheet */
+  z-index: -1;    /* no interfiere con clicks/stacking */
+}
+
+.pdf-section {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
