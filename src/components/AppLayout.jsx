@@ -1,26 +1,66 @@
 // src/layouts/AppLayout.jsx
-import React, { useState } from "react";
-import { Outlet } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
-import "../css/Sidebar.css"; // por si tus estilos viven aquí
+import "../css/Sidebar.css";
+import "../css/Dashboard.css"; // (aquí están .backdrop, .fab-open, .no-scroll)
+
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 900);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 899.98px)");
+    const onChange = (e) => setIsMobile(e.matches);
+    mq.addEventListener?.("change", onChange);
+    setIsMobile(mq.matches);
+    return () => mq.removeEventListener?.("change", onChange);
+  }, []);
+  return isMobile;
+};
 
 export default function AppLayout() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const isMobile = useIsMobile();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth >= 900);
+  const location = useLocation();
 
-  const closeSidebar = () => setIsSidebarOpen(false);
-  const openSidebar  = () => setIsSidebarOpen(true);
+  // Abierto en desktop, cerrado en móvil
+  useEffect(() => {
+    setIsSidebarOpen(!isMobile);
+  }, [isMobile]);
+
+  // Cerrar automáticamente al cambiar de ruta en móvil
+  useEffect(() => {
+    if (isMobile) setIsSidebarOpen(false);
+  }, [isMobile, location.pathname]);
+
+  // Bloquear scroll cuando el drawer está abierto en móvil
+  useEffect(() => {
+    if (isMobile && isSidebarOpen) document.body.classList.add("no-scroll");
+    else document.body.classList.remove("no-scroll");
+    return () => document.body.classList.remove("no-scroll");
+  }, [isMobile, isSidebarOpen]);
 
   return (
-    <div className={`app-shell ${isSidebarOpen ? "with-sidebar" : "sidebar-hidden"}`}>
-      {isSidebarOpen && <Sidebar onToggle={closeSidebar} />}
+    <div className="app-shell">
+      <Sidebar
+        className={isMobile && isSidebarOpen ? "is-open" : ""}
+        onNavigate={() => isMobile && setIsSidebarOpen(false)}
+      />
+
+      {isMobile && (
+        <div
+          className={`backdrop ${isSidebarOpen ? "show" : ""}`}
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       <main className="app-content">
         <Outlet />
       </main>
 
-      {!isSidebarOpen && (
+      {isMobile && !isSidebarOpen && (
         <button
           className="fab-open"
-          onClick={openSidebar}
+          onClick={() => setIsSidebarOpen(true)}
           aria-label="Abrir menú"
           title="Abrir menú"
         >

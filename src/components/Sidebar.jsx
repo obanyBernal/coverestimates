@@ -5,47 +5,52 @@ import menuIcon from "../assets/menu.svg";
 import preciosIcon from "../assets/precios.svg";
 import datosIcon from "../assets/datos.svg";
 import buscarIcon from "../assets/buscar.svg";
+import convertidorIcon from "../assets/convertidor.svg";
 
-const Sidebar = ({ onToggle = () => {} }) => {
+const Sidebar = ({ className = "", onNavigate = () => {} }) => {
   return (
-    <aside className="sidebar">
-      {/* HEADER */}
+    <aside className={`sidebar ${className}`}>
       <div className="sidebar-header">
         <h1 className="brand-title">Prices Calculator</h1>
+        <h2>v1.2</h2>
         <span className="brand-powered">Powered by OBernal</span>
       </div>
 
-      {/* NAV */}
       <nav className="sidebar-nav">
         <ul>
           <li>
-            <button type="button" className="sidebar-link" onClick={onToggle}>
+            <button type="button" className="sidebar-link" onClick={onNavigate}>
               <img src={menuIcon} alt="Menú" className="sidebar-icon" />
               <span>Menú</span>
             </button>
           </li>
           <li>
-            <Link to="/dashboard/precios" className="sidebar-link">
+            <Link to="/dashboard/precios" className="sidebar-link" onClick={onNavigate}>
               <img src={preciosIcon} alt="Precios" className="sidebar-icon" />
               <span>Precios</span>
             </Link>
           </li>
           <li>
-            <Link to="/dashboard/tabla-precios" className="sidebar-link">
+            <Link to="/dashboard/tabla-precios" className="sidebar-link" onClick={onNavigate}>
               <img src={datosIcon} alt="Tabla de precios" className="sidebar-icon" />
               <span>Tablas de Precios</span>
             </Link>
           </li>
           <li>
-            <Link to="/dashboard/buscar" className="sidebar-link">
+            <Link to="/dashboard/buscar" className="sidebar-link" onClick={onNavigate}>
               <img src={buscarIcon} alt="Buscar" className="sidebar-icon" />
               <span>Buscar</span>
+            </Link>
+          </li>
+          <li>
+            <Link to="/dashboard/convertidor" className="sidebar-link" onClick={onNavigate}>
+              <img src={convertidorIcon} alt="Convertidor" className="sidebar-icon" />
+              <span>Convertidor</span>
             </Link>
           </li>
         </ul>
       </nav>
 
-      {/* FOOTER / USER */}
       <div className="sidebar-footer">
         <div className="user-avatar" />
         <div className="user-info">

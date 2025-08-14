@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef } from "react"; // ⭐ añadí useRef
+import React, { useMemo, useState, useRef, useEffect } from "react"; // ⭐ añadí useRef
 import "../css/PriceCalculator.css";
 import "../css/ExportPDFButton.css";
 import { calcularPrecio } from "../utils/priceCalculator";
@@ -45,32 +45,8 @@ const useMeshOptions = () => {
   return { measures, categories };
 };
 
-// Genera expresión sumando 2ft a cada dimensión de AxB
+// Suma 2ft a cada dimensión en términos AxB y acumula área
 const growExpr = (expr, growBy = 2) => {
-  if (!expr || !expr.trim()) return { expr: "—", total: 0 };
-  const multSep = /\s*[x×*]\s*/i;
-  const safeNum = (s) => {
-    const n = Number(String(s).trim().replace(",", "."));
-    return Number.isFinite(n) ? n : NaN;
-  };
-  let total = 0;
-  let csExpr = expr.trim();
-  if (multSep.test(expr)) {
-    const [a, b] = expr.split(multSep);
-    const n1 = safeNum(a);
-    const n2 = safeNum(b);
-    if (Number.isFinite(n1) && Number.isFinite(n2)) {
-      const r1 = n1 + growBy;
-      const r2 = n2 + growBy;
-      csExpr = `${r1}x${r2}`;
-      total = r1 * r2;
-    }
-  }
-  return { expr: csExpr, total: Math.round(total) };
-};
-
-// Reduce 2ft a cada dimensión en términos AxB
-const shrinkExpr = (expr, shrinkBy = 2) => {
   if (!expr || !expr.trim()) return { expr: "—", total: 0 };
   const termSep = /\s*\+\s*/;
   const multSep = /\s*[x×*]\s*/i;
@@ -78,7 +54,7 @@ const shrinkExpr = (expr, shrinkBy = 2) => {
     const n = Number(String(s).trim().replace(",", "."));
     return Number.isFinite(n) ? n : NaN;
   };
-  let psTerms = [];
+  let csTerms = [];
   let total = 0;
   for (const rawTerm of expr.split(termSep).filter(Boolean)) {
     const term = rawTerm.trim();
@@ -87,20 +63,21 @@ const shrinkExpr = (expr, shrinkBy = 2) => {
       const n1 = safeNum(a);
       const n2 = safeNum(b);
       if (Number.isFinite(n1) && Number.isFinite(n2)) {
-        const r1 = Math.max(n1 - shrinkBy, 0);
-        const r2 = Math.max(n2 - shrinkBy, 0);
-        psTerms.push(`${r1}x${r2}`);
+        const r1 = n1 + growBy;
+        const r2 = n2 + growBy;
+        csTerms.push(`${r1}x${r2}`);
         total += r1 * r2;
       } else {
-        psTerms.push(term);
+        csTerms.push(term);
       }
     } else {
-      psTerms.push(term);
+      // término numérico suelto: no se “expande”; se suma tal cual
+      csTerms.push(term);
       const n = safeNum(term);
       if (Number.isFinite(n)) total += n;
     }
   }
-  return { expr: psTerms.join(" + "), total: Math.round(total) };
+  return { expr: csTerms.join(" + "), total: Math.round(total) };
 };
 
 const useSolidOptions = () => {
@@ -120,6 +97,7 @@ const useSolidOptions = () => {
   );
   return { measures, categories };
 };
+const STORAGE_KEY = "priceCalc:v1";
 
 const PriceCalculator = () => {
   // ⭐ ref del área a exportar
@@ -134,15 +112,45 @@ const PriceCalculator = () => {
   const [meshEnabled, setMeshEnabled] = useState(false);
   const [meshMeasure, setMeshMeasure] = useState("");
   const [meshCategory, setMeshCategory] = useState("");
-  const { measures: meshMeasures, categories: meshCategories } =
+  const { /*measures: meshMeasures,*/ categories: meshCategories } =
     useMeshOptions();
 
   // STANDARD – Solid
   const [solidEnabled, setSolidEnabled] = useState(false);
   const [solidMeasure, setSolidMeasure] = useState("");
   const [solidCategory, setSolidCategory] = useState("");
-  const { measures: solidMeasures, categories: solidCategories } =
+  const { /*measures: solidMeasures,*/ categories: solidCategories } =
     useSolidOptions();
+
+  // 🔹 Medidas filtradas por categoría (grupo) – MESH
+  const meshMeasuresFiltered = useMemo(() => {
+    if (!meshCategory) return [];
+    return uniq(
+      meshStandard
+        .filter((g) => g.group === meshCategory)
+        .flatMap((g) => g.items.map((i) => i.poolSize))
+    ).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  }, [meshCategory]);
+
+  // Al cambiar categoría, limpiamos la medida
+  useEffect(() => {
+    setMeshMeasure("");
+  }, [meshCategory]);
+
+  // 🔹 Medidas filtradas por categoría (grupo) – SOLID
+  const solidMeasuresFiltered = useMemo(() => {
+    if (!solidCategory) return [];
+    return uniq(
+      solidStandard
+        .filter((g) => g.group === solidCategory)
+        .flatMap((g) => g.items.map((i) => i.poolSize))
+    ).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  }, [solidCategory]);
+
+  // Al cambiar categoría, limpiamos la medida
+  useEffect(() => {
+    setSolidMeasure("");
+  }, [solidCategory]);
 
   // CUSTOM
   const [customMeshEnabled, setCustomMeshEnabled] = useState(false);
@@ -259,7 +267,11 @@ const PriceCalculator = () => {
       solidRetail: 0,
       solidDealer: 0,
     };
-
+    // 🔹 NUEVO: CS para custom = PS ingresado, crecido +2ft por lado
+    const customCsSqft =
+      customMeshEnabled || customSolidEnabled
+        ? growExpr(customExpr, 2).total || 0
+        : 0;
     const calcMeshPart = () => {
       if (meshMode === "off") return zero;
       if (meshMode === "standard") {
@@ -289,7 +301,7 @@ const PriceCalculator = () => {
           solidCategory: "",
           customMeshEnabled: true,
           customSolidEnabled: false,
-          customSqft: parsedSqft,
+          customSqft: customCsSqft,
           customGrid,
           padding,
           wall,
@@ -328,7 +340,7 @@ const PriceCalculator = () => {
           solidCategory: "",
           customMeshEnabled: false,
           customSolidEnabled: true,
-          customSqft: parsedSqft,
+          customSqft: customCsSqft,
           customGrid,
           padding,
           wall,
@@ -396,23 +408,7 @@ const PriceCalculator = () => {
             />
             Mesh
           </label>
-
-          <div className="dropdown">
-            <label>Seleccione Medida</label>
-            <select
-              value={meshMeasure}
-              onChange={(e) => setMeshMeasure(e.target.value)}
-              disabled={!meshEnabled}
-            >
-              <option value="">— Seleccione —</option>
-              {meshMeasures.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-          </div>
-
+          {/* 🔁 IZQ: Tipo de Piscina (grupo) */}
           <div className="dropdown">
             <label>Seleccione Tipo de Piscina</label>
             <select
@@ -424,6 +420,22 @@ const PriceCalculator = () => {
               {meshCategories.map((c) => (
                 <option key={c} value={c}>
                   {c}
+                </option>
+              ))}
+            </select>
+          </div>
+          {/* 🔁 DER: Medida filtrada por el grupo */}
+          <div className="dropdown">
+            <label>Seleccione Medida</label>
+            <select
+              value={meshMeasure}
+              onChange={(e) => setMeshMeasure(e.target.value)}
+              disabled={!meshEnabled || !meshCategory}
+            >
+              <option value="">— Seleccione —</option>
+              {meshMeasuresFiltered.map((m) => (
+                <option key={m} value={m}>
+                  {m}
                 </option>
               ))}
             </select>
@@ -451,22 +463,7 @@ const PriceCalculator = () => {
             Solid
           </label>
 
-          <div className="dropdown">
-            <label>Seleccione Medida</label>
-            <select
-              value={solidMeasure}
-              onChange={(e) => setSolidMeasure(e.target.value)}
-              disabled={!solidEnabled}
-            >
-              <option value="">— Seleccione —</option>
-              {solidMeasures.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-          </div>
-
+          {/* 🔁 IZQ: Tipo de Piscina (grupo) */}
           <div className="dropdown">
             <label>Seleccione Tipo de Piscina</label>
             <select
@@ -482,139 +479,150 @@ const PriceCalculator = () => {
               ))}
             </select>
           </div>
-        </div>
-      </section>
-      {/* CUSTOM + controles globales */}
-      <section
-        className="section"
-        style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}
-      >
-        {/* Card Custom */}
-        <div className="section" style={{ margin: 0 }}>
-          <h3>Calculo de precios Custom</h3>
-
-          <div className="row" style={{ alignItems: "center" }}>
-            <label
-              style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
+          {/* 🔁 DER: Medida filtrada por el grupo */}
+          <div className="dropdown">
+            <label>Seleccione Medida</label>
+            <select
+              value={solidMeasure}
+              onChange={(e) => setSolidMeasure(e.target.value)}
+              disabled={!solidEnabled || !solidCategory}
             >
-              <input
-                type="checkbox"
-                checked={customMeshEnabled}
-                onChange={() => setCustomMeshEnabled((v) => !v)}
-                disabled={customMeshDisabled}
-              />
-              Mesh
-            </label>
-            <label
-              style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
-            >
-              <input
-                type="checkbox"
-                checked={customSolidEnabled}
-                onChange={() => setCustomSolidEnabled((v) => !v)}
-                disabled={customSolidDisabled}
-              />
-              Solid
-            </label>
-          </div>
-
-          {/* Expresión */}
-          <div className="row" style={{ alignItems: "center", gap: 8 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div>
-                <label>Pool Size (expresión)</label>
-                <input
-                  type="text"
-                  placeholder="Ej: 24x45 + 10x25"
-                  value={customExpr}
-                  onChange={(e) => setCustomExpr(e.target.value)}
-                  disabled={false}
-                />
-              </div>
-              <span className="result-label" style={{ whiteSpace: "nowrap" }}>
-                = {Number.isFinite(parsedSqft) ? `${parsedSqft} ft²` : "—"}
-              </span>
-            </div>
-          </div>
-
-          {/* Error/ayuda */}
-          <div style={{ minHeight: 20, marginTop: 4 }}>
-            {exprError ? (
-              <div className="error" style={{ color: "crimson", fontSize: 12 }}>
-                {exprError}
-              </div>
-            ) : (
-              <div className="hint" style={{ fontSize: 12, opacity: 0.7 }}>
-                Ingresa el valor, puedes ingresar valores ampliados (ej. 20x30 +
-                8x10 + 12).
-              </div>
-            )}
-          </div>
-
-          {/* 5x5 / 3x3 */}
-          <div className="row" style={{ alignItems: "center" }}>
-            <label style={{ flex: "0 0 100%", color: "#6e8796" }}>
-              Tipo de malla
-            </label>
-
-            <label
-              style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
-            >
-              <input
-                type="checkbox"
-                checked={customGrid === "5x5"}
-                onChange={() => toggleGrid("5x5")}
-                disabled={meshEnabled && solidEnabled}
-              />
-              5x5
-            </label>
-
-            <label
-              style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
-            >
-              <input
-                type="checkbox"
-                checked={customGrid === "3x3"}
-                onChange={() => toggleGrid("3x3")}
-                disabled={meshEnabled && solidEnabled}
-              />
-              3x3
-            </label>
-          </div>
-        </div>
-
-        {/* Controles globales */}
-        <div className="row" style={{ alignItems: "end" }}>
-          <div>
-            <label>Padding</label>
-            <input
-              type="number"
-              placeholder="100"
-              value={padding}
-              onChange={(e) => setPadding(e.target.value)}
-            />
-          </div>
-          <div>
-            <label>Wall</label>
-            <input
-              type="number"
-              placeholder="100"
-              value={wall}
-              onChange={(e) => setWall(e.target.value)}
-            />
-          </div>
-          <div>
-            <label>Descuento</label>
-            <input
-              type="number"
-              placeholder="45"
-              value={discount}
-              onChange={(e) => setDiscount(e.target.value)}
-            />
+              <option value="">— Seleccione —</option>
+              {solidMeasuresFiltered.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </section>
-      <section className="section results-card" style={{ background: "#fff" }}>
+     {/* CUSTOM + controles globales */}
+<section
+  className="section section-custom-wrap"
+  style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}
+>
+  {/* Card Custom */}
+  <div className="section" style={{ margin: 0 }}>
+    <h3>Calculo de precios Custom</h3>
+
+    <div className="row" style={{ alignItems: "center" }}>
+      <label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+        <input
+          type="checkbox"
+          checked={customMeshEnabled}
+          onChange={() => setCustomMeshEnabled((v) => !v)}
+          disabled={customMeshDisabled}
+        />
+        Mesh
+      </label>
+
+      <label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+        <input
+          type="checkbox"
+          checked={customSolidEnabled}
+          onChange={() => setCustomSolidEnabled((v) => !v)}
+          disabled={customSolidDisabled}
+        />
+        Solid
+      </label>
+    </div>
+
+    {/* Expresión */}
+    <div className="row" style={{ alignItems: "center", gap: 8 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div>
+          <label>Pool Size (expresión)</label>
+          <input
+            type="text"
+            placeholder="Ej: 24x45 + 10x25"
+            value={customExpr}
+            onChange={(e) => setCustomExpr(e.target.value)}
+            disabled={false}
+          />
+        </div>
+
+        <span className="result-label" style={{ whiteSpace: "nowrap" }}>
+          = {Number.isFinite(parsedSqft) ? `${parsedSqft} ft²` : "—"}
+        </span>
+      </div>
+    </div>
+
+    {/* Error/ayuda */}
+    <div style={{ minHeight: 20, marginTop: 4 }}>
+      {exprError ? (
+        <div className="error" style={{ color: "crimson", fontSize: 12 }}>
+          {exprError}
+        </div>
+      ) : (
+        <div className="hint" style={{ fontSize: 12, opacity: 0.7 }}>
+          Ingresa el valor, puedes ingresar valores ampliados (ej. 20x30 + 8x10 + 12).
+        </div>
+      )}
+    </div>
+
+    {/* 5x5 / 3x3 */}
+    <div className="row" style={{ alignItems: "center" }}>
+      <label style={{ flex: "0 0 100%", color: "#6e8796" }}>
+        Tipo de malla
+      </label>
+
+      <label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+        <input
+          type="checkbox"
+          checked={customGrid === "5x5"}
+          onChange={() => toggleGrid("5x5")}
+          disabled={meshEnabled && solidEnabled}
+        />
+        5x5
+      </label>
+
+      <label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+        <input
+          type="checkbox"
+          checked={customGrid === "3x3"}
+          onChange={() => toggleGrid("3x3")}
+          disabled={meshEnabled && solidEnabled}
+        />
+        3x3
+      </label>
+    </div>
+  </div>
+
+  {/* Controles globales */}
+  <div className="row" style={{ alignItems: "end" }}>
+    <div>
+      <label>Padding</label>
+      <input
+        type="number"
+        placeholder="100"
+        value={padding}
+        onChange={(e) => setPadding(e.target.value)}
+      />
+    </div>
+
+    <div>
+      <label>Wall</label>
+      <input
+        type="number"
+        placeholder="100"
+        value={wall}
+        onChange={(e) => setWall(e.target.value)}
+      />
+    </div>
+
+    <div>
+      <label>Descuento</label>
+      <input
+        type="number"
+        placeholder="45"
+        value={discount}
+        onChange={(e) => setDiscount(e.target.value)}
+      />
+    </div>
+  </div>
+</section>
+   <section className="section results-card" style={{ background: "#fff" }}>
         <h3>Estimado</h3>
         <div className="res-grid">
           <div className="res-col">
@@ -649,13 +657,10 @@ const PriceCalculator = () => {
             let csLabel = "—";
 
             if (isCustomMode) {
-              const cs = parsedSqft;
-              const { expr: psExpr, total: psTotal } = shrinkExpr(
-                customExpr,
-                2
-              );
-              csLabel = labelExpr(customExpr, cs);
-              psLabel = `${psExpr} = ${fmtNum(psTotal)}`;
+              const ps = parsedSqft;
+              const { expr: csExpr, total: csTotal } = growExpr(customExpr, 2);
+              psLabel = labelExpr(customExpr, ps); // PS = lo ingresado
+              csLabel = `${csExpr} = ${fmtNum(csTotal)}`;
             } else {
               const chosenMeasure = meshMeasure || solidMeasure || "";
               if (chosenMeasure) {
@@ -770,13 +775,13 @@ const PriceCalculator = () => {
                 let csLabel = "—";
 
                 if (isCustomMode) {
-                  const cs = parsedSqft;
-                  const { expr: psExpr, total: psTotal } = shrinkExpr(
+                  const ps = parsedSqft;
+                  const { expr: csExpr, total: csTotal } = growExpr(
                     customExpr,
                     2
                   );
-                  csLabel = labelExpr(customExpr, cs);
-                  psLabel = `${psExpr} = ${fmtNum(psTotal)}`;
+                  psLabel = labelExpr(customExpr, ps); // PS = lo ingresado
+                  csLabel = `${csExpr} = ${fmtNum(csTotal)}`;
                 } else {
                   const chosenMeasure = meshMeasure || solidMeasure || "";
                   if (chosenMeasure) {

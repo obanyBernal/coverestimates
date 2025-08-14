@@ -62,3 +62,46 @@
   max-width: 1280px;            /* no más ancho que esto */
 }
 
+/* El layout no debe cambiar al abrir el sidebar en móvil */
+@media (max-width: 900px){
+  .dashboard-container{
+    display: grid;
+    grid-template-columns: 1fr; /* siempre 1 columna; el sidebar es fixed */
+  }
+  .dashboard-main{
+    padding: 12px;
+  }
+}
+
+/* Overlay detrás del drawer */
+.backdrop{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.18);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease;
+  z-index: 900;
+}
+.backdrop.show{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* FAB visible sobre overlay y sidebar */
+.fab-open{
+  position: fixed;
+  bottom: 14px;
+  left: 14px;
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  box-shadow: 0 10px 24px rgba(0,0,0,.25);
+  z-index: 1100;           /* por encima del overlay y contenido */
+}
+
+/* Bloquea el scroll cuando el drawer está abierto */
+.no-scroll{
+  overflow: hidden;
+  touch-action: none;      /* iOS */
+}
+

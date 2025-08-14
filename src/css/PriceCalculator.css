@@ -218,11 +218,86 @@ select{
   max-width: 260px;
 }
 
-/* Responsive */
-@media (max-width: 980px){
-  .row > *{ min-width:200px; }
-}
-@media (min-width: 1440px){
-  .price-calculator { max-width: 1280px; }
-}
+/* ===== CUSTOM — MOBILE LAYOUT ===== */
+@media (max-width: 900px){
+  /* Fuerza 1 columna fluida en cualquier fila del Custom */
+  .section .row{
+    gap: 12px;
+  }
+  .section .row > *{
+    flex: 1 1 100%;
+    min-width: 0;      /* clave para que no “empuje” el layout */
+  }
 
+  /* Si tu panel izquierdo/derecho son contenedores visuales, dale 100% */
+  .section .row .panel,
+  .section .row .card,
+  .section .row .fieldset{
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  /* Inputs numéricos (Padding, Wall, Descuento) a ancho completo y apilados */
+  .section .row input[type="number"]{
+    max-width: 100%;
+  }
+
+  /* Línea de expresión: input + “= 0 ft²” alineados en fila y sin cortar */
+  /* Si tu markup es <input ... /><span> = 0 ft²</span> */
+  .section input[type="text"] + span{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  /* Evitar zoom de iOS al enfocar */
+  input, select{
+    font-size: 16px;
+  }
+
+  /* Resultados/columnas a una sola columna en móvil */
+  .res-grid{ grid-template-columns: 1fr; }
+  .res-columns{ grid-template-columns: 1fr; gap: 10px; }
+  .res-rows{ grid-template-columns: 1fr; gap: 8px; }
+
+   /* Forzar grid a 1 sola columna */
+  .section-custom-wrap{
+    display: block !important;
+    grid-template-columns: 1fr !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+    row-gap: 3rem !important;
+  }
+
+  /* El bloque de card custom ocupa todo el ancho */
+  .section-custom-wrap > .section{
+    width: 100%;
+  }
+
+  /* Controles globales debajo y apilados */
+  .section-custom-wrap > .row{
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 10px;
+    width: 70%;
+  }
+  .section-custom-wrap > .row > div{
+    width: 100%;
+  }
+    /* Quitar espacio extra en la fila de controles */
+  .section-custom-wrap > .row:last-child{
+    margin-bottom: 2rem !important;
+    padding-bottom: 1rem !important;
+  }
+
+  /* Evitar zoom en iOS */
+  .section-custom-wrap input,
+  .section-custom-wrap select{
+    font-size: 16px;
+  }
+
+  /* Si quieres espacio extra entre custom y controles */
+}

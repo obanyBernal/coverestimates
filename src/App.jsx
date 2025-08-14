@@ -5,6 +5,7 @@ import Dashboard from "./routes/Dashboard";
 import PriceCalculator from "./components/PriceCalculator";
 import TablaPrecios from "./components/TablaPrecios"; // ahora desde components
 import Buscar from "./components/Buscar";             // ahora desde components
+import ConvertidorMedidas from "./components/ConvertidorMedidas";
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
           <Route path="precios" element={<PriceCalculator />} />
           <Route path="tabla-precios" element={<TablaPrecios />} />
           <Route path="buscar" element={<Buscar />} />
+          <Route path="convertidor" element={<ConvertidorMedidas />} />
         </Route>
 
         {/* Fallback */}

@@ -1,0 +1,59 @@
+.convertidor-container {
+  padding: 20px;
+  max-width: 400px;
+  margin: auto;
+  text-align: center;
+}
+
+.convertidor-container input {
+  padding: 8px;
+  margin: 10px 0;
+  width: 100%;
+}
+
+.convertidor-container button {
+  padding:.95rem 1.6rem;
+  border:none;
+  border-radius:999px;
+  font-weight:700;
+  cursor:pointer;
+  transition: .2s ease;
+  background-color: #005fa3;
+  color: aliceblue;
+}
+
+.convertidor-container button:hover {
+  background-color: #51c064;
+}
+
+.help{
+    color: #a2a2a2;
+    font-style: italic;
+}
+
+.big-result {
+  margin-top: 20px;
+  font-size: 3rem; /* número grande */
+  font-weight: bold;
+  color: #0077cc;
+}
+
+.recommendation {
+  font-size: 1.2rem;
+  font-weight: normal;
+  color: #555;
+}
+
+/* ====== MOBILE ====== */
+@media (max-width: 600px){
+  .convertidor-container{
+    padding: 16px;
+    max-width: 100%;
+  }
+  .big-result{
+    font-size: 2.4rem;
+  }
+  .recommendation{
+    font-size: 1rem;
+  }
+}

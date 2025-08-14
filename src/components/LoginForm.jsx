@@ -20,7 +20,7 @@ const LoginForm = () => {
 
   return (
     <div className="login-form-container">
-      <h2 className="login-title">Prices Calculator</h2>
+      <h2 className="login-title">Prices Calculator v1.2</h2>
       <form className="login-form" onSubmit={handleLogin}>
         <label>USUARIO</label>
         <input

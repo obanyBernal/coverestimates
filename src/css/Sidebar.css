@@ -145,3 +145,37 @@
   cursor: pointer;
   box-shadow: 0 6px 16px rgba(0,0,0,0.2);
 }
+
+/* Desktop por defecto */
+@media (min-width: 900px){
+  .sidebar{
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    width: 260px;
+    transform: none;
+    z-index: auto;
+    /* ya tenías: background-color:#0b3d5c; color:#d0efff; */
+  }
+}
+
+/* Drawer móvil */
+@media (max-width: 899.98px){
+  .sidebar{
+    position: fixed;
+    inset: 0 auto 0 0;   /* left:0; top/bottom:0 */
+    width: 82vw;
+    max-width: 320px;
+    height: 100dvh;
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+    z-index: 1000;
+    background: #0b3d5c;   /* 👈 mantenemos el fondo oscuro */
+    color: #d0efff;        /* 👈 y el color de texto claro */
+    overflow-y: auto;      /* 👈 scroll interno */
+    -webkit-overflow-scrolling: touch;
+  }
+  .sidebar.is-open{
+    transform: translateX(0);
+  }
+}
