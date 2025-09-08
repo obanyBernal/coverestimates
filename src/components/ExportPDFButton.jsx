@@ -23,7 +23,7 @@ async function urlToDataURL(url) {
 }
 
 export default function ExportPDFButton({
-  targetRef,              // ref al contenedor que quieres exportar
+  targetRef, // ref al contenedor que quieres exportar
   filename = "detalles_precio.pdf",
   companyLines = [
     "55 Knickerbocker Ave. Bohemia, NY 11716",
@@ -37,15 +37,13 @@ export default function ExportPDFButton({
     if (!targetRef?.current) return;
 
     // Render del contenido a canvas
- // EN ExportPDFButton.jsx, REEMPLAZA LA LLAMADA A html2canvas POR ESTA (MEJOR ESCALA)
-const canvas = await html2canvas(targetRef.current, {
-  scale: 2,
-  backgroundColor: "#ffffff",
-  windowWidth: 720,
-  useCORS: true,
-});
-
-    
+    // EN ExportPDFButton.jsx, REEMPLAZA LA LLAMADA A html2canvas POR ESTA (MEJOR ESCALA)
+    const canvas = await html2canvas(targetRef.current, {
+      scale: 2,
+      backgroundColor: "#ffffff",
+      windowWidth: 720,
+      useCORS: true,
+    });
 
     const pdf = new jsPDF("p", "mm", "a4");
     const pageW = pdf.internal.pageSize.getWidth();
@@ -54,13 +52,12 @@ const canvas = await html2canvas(targetRef.current, {
     // Calcular áreas útiles
     const contentWmm = pageW - mm.margin * 2;
     const usableHmm = pageH - mm.headerH - mm.footerH;
-  
 
     // Relación px/mm para cortes por página
     const pxPerMm = canvas.width / contentWmm;
     const pageSlicePx = Math.floor(usableHmm * pxPerMm);
 
-     // Umbral: si el sobrante es menor a X mm, no crear una nueva página
+    // Umbral: si el sobrante es menor a X mm, no crear una nueva página
     const MIN_REMAINDER_MM = 3;
 
     // Prepara logo como DataURL
@@ -69,12 +66,14 @@ const canvas = await html2canvas(targetRef.current, {
     // Funciones de header/footer
     const drawHeader = () => {
       const logoWmm = 36; // ancho del logo (ajústalo si lo quieres más grande/pequeño)
-      const logoHmm = (logoWmm * 1) * 0.33; // altura aprox (relación flexible)
+      const logoHmm = logoWmm * 1 * 0.33; // altura aprox (relación flexible)
       const x = mm.margin;
       const y = (mm.headerH - logoHmm) / 2; // centrado vertical en header
       try {
         pdf.addImage(logoDataUrl, "PNG", x, y, logoWmm, logoHmm);
-      } catch  { /* si falla el logo, no rompemos */ }
+      } catch {
+        /* si falla el logo, no rompemos */
+      }
 
       // Línea separadora
       pdf.setLineWidth(0.2);
@@ -84,7 +83,12 @@ const canvas = await html2canvas(targetRef.current, {
     const drawFooter = (pageNumber) => {
       // Línea separadora
       pdf.setLineWidth(0.2);
-      pdf.line(mm.margin, pageH - mm.footerH, pageW - mm.margin, pageH - mm.footerH);
+      pdf.line(
+        mm.margin,
+        pageH - mm.footerH,
+        pageW - mm.margin,
+        pageH - mm.footerH
+      );
 
       // Datos de la empresa
       pdf.setFontSize(9);
@@ -94,7 +98,9 @@ const canvas = await html2canvas(targetRef.current, {
       });
 
       // Número de página (opcional)
-      pdf.text(String(pageNumber), pageW - mm.margin, pageH - 4, { align: "right" });
+      pdf.text(String(pageNumber), pageW - mm.margin, pageH - 4, {
+        align: "right",
+      });
     };
 
     // Iremos cortando el canvas por “rebanadas” de alto pageSlicePx
@@ -102,20 +108,27 @@ const canvas = await html2canvas(targetRef.current, {
     const totalHeight = canvas.height;
 
     while (pageIndex * pageSlicePx < totalHeight) {
+      const sliceHeight = Math.min(
+        pageSlicePx,
+        totalHeight - pageIndex * pageSlicePx
+      );
+
+      // ⚡ si la rebanada es demasiado pequeña (< 20 px), rompemos el loop
+      if (sliceHeight < 20) break;
+
       if (pageIndex > 0) pdf.addPage();
 
-      // Crear un canvas temporal para la rebanada
       const sliceCanvas = document.createElement("canvas");
       sliceCanvas.width = canvas.width;
-      sliceCanvas.height = Math.min(pageSlicePx, totalHeight - pageIndex * pageSlicePx);
+      sliceCanvas.height = sliceHeight;
 
       const ctx = sliceCanvas.getContext("2d");
       ctx.drawImage(
         canvas,
         0,
-        pageIndex * pageSlicePx,         // srcY
+        pageIndex * pageSlicePx, // srcY
         canvas.width,
-        sliceCanvas.height,              // srcH (lo que quepa)
+        sliceCanvas.height, // srcH
         0,
         0,
         sliceCanvas.width,
@@ -124,23 +137,21 @@ const canvas = await html2canvas(targetRef.current, {
 
       const sliceImg = sliceCanvas.toDataURL("image/png");
 
-      // Dibuja header/footer
       drawHeader();
       drawFooter(pageIndex + 1);
 
-      // Pegar la rebanada dentro del área útil
       pdf.addImage(
         sliceImg,
         "PNG",
         mm.margin,
         mm.headerH,
         contentWmm,
-        (sliceCanvas.height / pxPerMm) // alto en mm de esta rebanada
+        sliceCanvas.height / pxPerMm
       );
 
       pageIndex++;
     }
-    
+
     pdf.save(filename);
   };
 

@@ -6,14 +6,15 @@ import preciosIcon from "../assets/precios.svg";
 import datosIcon from "../assets/datos.svg";
 import buscarIcon from "../assets/buscar.svg";
 import convertidorIcon from "../assets/convertidor.svg";
+import labelIcon from "../assets/label.svg";
 
 const Sidebar = ({ className = "", onNavigate = () => {} }) => {
   return (
     <aside className={`sidebar ${className}`}>
       <div className="sidebar-header">
-        <h1 className="brand-title">Prices Calculator</h1>
-        <h2>v1.2</h2>
-        <span className="brand-powered">Powered by OBernal</span>
+        <h1 className="brand-title">Li Safety Pools Covers</h1>
+        <h2>v2.0</h2>
+        <span className="brand-powered">System</span>
       </div>
 
       <nav className="sidebar-nav">
@@ -27,13 +28,13 @@ const Sidebar = ({ className = "", onNavigate = () => {} }) => {
           <li>
             <Link to="/dashboard/precios" className="sidebar-link" onClick={onNavigate}>
               <img src={preciosIcon} alt="Precios" className="sidebar-icon" />
-              <span>Precios</span>
+              <span>Calculador de Precios</span>
             </Link>
           </li>
           <li>
             <Link to="/dashboard/tabla-precios" className="sidebar-link" onClick={onNavigate}>
               <img src={datosIcon} alt="Tabla de precios" className="sidebar-icon" />
-              <span>Tablas de Precios</span>
+              <span>Stock Viewer</span>
             </Link>
           </li>
           <li>
@@ -45,9 +46,15 @@ const Sidebar = ({ className = "", onNavigate = () => {} }) => {
           <li>
             <Link to="/dashboard/convertidor" className="sidebar-link" onClick={onNavigate}>
               <img src={convertidorIcon} alt="Convertidor" className="sidebar-icon" />
-              <span>Convertidor</span>
+              <span>Utilidad Medidas</span>
             </Link>
           </li>
+                  <li>
+            <Link to="/dashboard/label" className="sidebar-link" onClick={onNavigate}>
+              <img src={labelIcon} alt="Label" className="sidebar-icon" />
+              <span>Label</span>
+            </Link>
+         </li>
         </ul>
       </nav>
 

@@ -723,109 +723,103 @@ const PriceCalculator = () => {
           </div>
         </div>
       </section>
-      {/*  solo pdf */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: "fixed",
-          left: "-10000px",
-          top: 0,
-          width: "720px",
-          zIndex: -1,
-        }}
-      >
-        <div ref={pdfRef} className="pdf-sheet">
-          <div ref={pdfRef} className="pdf-sheet">
-            {/* BLOQUE 1 */}
-            <div className="pdf-section pdf-section--primary pdf-section--compact">
-              <h3 className="pdf-title pdf-title-lg">Estimado</h3>
-              <div className="pdf-grid-2x2 pdf-kv pdf-kv-lg">
-                <div className="pdf-k">Dealer:</div>
-                <div className="pdf-v">{dealer || "—"}</div>
 
-                <div className="pdf-k">JOB:</div>
-                <div className="pdf-v">{job || "—"}</div>
 
-                <div className="pdf-k">Malla:</div>
-                <div className="pdf-v">{customGrid || "—"}</div>
+{/*  solo pdf */}
+<div
+  aria-hidden="true"
+  style={{
+    position: "fixed",
+    left: "-10000px",
+    top: 0,
+    width: "720px",
+    zIndex: -1,
+  }}
+>
+  <div ref={pdfRef} className="pdf-sheet">
+    {/* BLOQUE 1 */}
+    <div className="pdf-section pdf-section--primary pdf-section--compact">
+      <h3 className="pdf-title pdf-title-lg">Estimado</h3>
+      <div className="pdf-grid-2x2 pdf-kv pdf-kv-lg">
+        <div className="pdf-k">Dealer:</div>
+        <div className="pdf-v">{dealer || "—"}</div>
 
-                <div className="pdf-k">Fecha / Hora:</div>
-                <div className="pdf-v">
-                  {new Date().toLocaleDateString()}{" "}
-                  {new Date().toLocaleTimeString()}
-                </div>
-              </div>
-            </div>
+        <div className="pdf-k">JOB:</div>
+        <div className="pdf-v">{job || "—"}</div>
 
-            {/* BLOQUE 2 */}
-            <div className="pdf-section">
-              {(() => {
-                const wantsCustom = customMeshEnabled || customSolidEnabled;
-                const hasStandardActive = Boolean(
-                  meshEnabled ||
-                    solidEnabled ||
-                    meshMeasure ||
-                    meshCategory ||
-                    solidMeasure ||
-                    solidCategory
-                );
-                const isCustomMode = wantsCustom && !hasStandardActive;
+        <div className="pdf-k">Malla:</div>
+        <div className="pdf-v">{customGrid || "—"}</div>
 
-                let psLabel = "—";
-                let csLabel = "—";
-
-                if (isCustomMode) {
-                  const ps = parsedSqft;
-                  const { expr: csExpr, total: csTotal } = growExpr(
-                    customExpr,
-                    2
-                  );
-                  psLabel = labelExpr(customExpr, ps); // PS = lo ingresado
-                  csLabel = `${csExpr} = ${fmtNum(csTotal)}`;
-                } else {
-                  const chosenMeasure = meshMeasure || solidMeasure || "";
-                  if (chosenMeasure) {
-                    const psTotal = parseAreaExpression(chosenMeasure).value;
-                    const { expr: csExpr, total: csTotal } = growExpr(
-                      chosenMeasure,
-                      2
-                    );
-                    psLabel = `${chosenMeasure} = ${fmtNum(psTotal)}`;
-                    csLabel = `${csExpr} = ${fmtNum(csTotal)}`;
-                  }
-                }
-
-                return (
-                  <div className="pdf-kv pdf-kv-lg">
-                    <div className="pdf-k">Ps:</div>
-                    <div className="pdf-v">{psLabel}</div>
-                    <div className="pdf-k">CS:</div>
-                    <div className="pdf-v">{csLabel}</div>
-                    <div className="pdf-k">Wall:</div>
-                    <div className="pdf-v">{fmtNum(wall || 0)}</div>
-                    <div className="pdf-k">Padding:</div>
-                    <div className="pdf-v">{fmtNum(padding || 0)}</div>
-                  </div>
-                );
-              })()}
-            </div>
-
-            {/* BLOQUE 3 */}
-            <div className="pdf-section">
-              <div className="pdf-kv pdf-kv-lg">
-                <div className="pdf-k">Mesh Retail:</div>
-                <div className="pdf-v">{fmtMoney(results.meshRetail)}</div>
-                <div className="pdf-k">Solid Retail:</div>
-                <div className="pdf-v">{fmtMoney(results.solidRetail)}</div>
-                <div className="pdf-k">Mesh Dealer:</div>
-                <div className="pdf-v">{fmtMoney(results.meshDealer)}</div>
-                <div className="pdf-k">Solid Dealer:</div>
-                <div className="pdf-v">{fmtMoney(results.solidDealer)}</div>
-              </div>
-            </div>
-          </div>
+        <div className="pdf-k">Fecha / Hora:</div>
+        <div className="pdf-v">
+          {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
         </div>
       </div>
+    </div>
+
+    {/* BLOQUE 2 */}
+    <div className="pdf-section">
+      {(() => {
+        const wantsCustom = customMeshEnabled || customSolidEnabled;
+        const hasStandardActive = Boolean(
+          meshEnabled ||
+          solidEnabled ||
+          meshMeasure ||
+          meshCategory ||
+          solidMeasure ||
+          solidCategory
+        );
+        const isCustomMode = wantsCustom && !hasStandardActive;
+
+        let psLabel = "—";
+        let csLabel = "—";
+
+        if (isCustomMode) {
+          const ps = parsedSqft;
+          const { expr: csExpr, total: csTotal } = growExpr(customExpr, 2);
+          psLabel = labelExpr(customExpr, ps);
+          csLabel = `${csExpr} = ${fmtNum(csTotal)}`;
+        } else {
+          const chosenMeasure = meshMeasure || solidMeasure || "";
+          if (chosenMeasure) {
+            const psTotal = parseAreaExpression(chosenMeasure).value;
+            const { expr: csExpr, total: csTotal } = growExpr(chosenMeasure, 2);
+            psLabel = `${chosenMeasure} = ${fmtNum(psTotal)}`;
+            csLabel = `${csExpr} = ${fmtNum(csTotal)}`;
+          }
+        }
+
+        return (
+          <div className="pdf-kv pdf-kv-lg">
+            <div className="pdf-k">Ps:</div>
+            <div className="pdf-v">{psLabel}</div>
+            <div className="pdf-k">CS:</div>
+            <div className="pdf-v">{csLabel}</div>
+            <div className="pdf-k">Wall:</div>
+            <div className="pdf-v">{fmtNum(wall || 0)}</div>
+            <div className="pdf-k">Padding:</div>
+            <div className="pdf-v">{fmtNum(padding || 0)}</div>
+          </div>
+        );
+      })()}
+    </div>
+
+    {/* BLOQUE 3 */}
+    <div className="pdf-section">
+      <div className="pdf-kv pdf-kv-lg">
+        <div className="pdf-k">Mesh Retail:</div>
+        <div className="pdf-v">{fmtMoney(results.meshRetail)}</div>
+        <div className="pdf-k">Solid Retail:</div>
+        <div className="pdf-v">{fmtMoney(results.solidRetail)}</div>
+        <div className="pdf-k">Mesh Dealer:</div>
+        <div className="pdf-v">{fmtMoney(results.meshDealer)}</div>
+        <div className="pdf-k">Solid Dealer:</div>
+        <div className="pdf-v">{fmtMoney(results.solidDealer)}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
       <div
         className="button-row"
         style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}
@@ -839,7 +833,7 @@ const PriceCalculator = () => {
           </button>
           <ExportPDFButton
             targetRef={pdfRef}
-            filename="detalles_precio.pdf"
+            filename={job ? `${job}_${new Date().toISOString().slice(0, 10)}.pdf` : `${dealer}_${new Date().toISOString().slice(0, 10)}.pdf`}
             companyLines={[
               "55 Knickerbocker Ave. Bohemia, NY 11716",
               "+1 (631) 704-0010",

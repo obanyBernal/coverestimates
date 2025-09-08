@@ -41,36 +41,49 @@ function evalSumaMultip(exprRaw) {
   return { ok: true, value: total };
 }
 
-
 export default function ConvertidorMedidas() {
   const [expresion, setExpresion] = useState("");
   const resultado = useMemo(() => evalSumaMultip(expresion), [expresion]);
-
   const pulgadas = resultado.ok ? resultado.value : null;
   const pies = resultado.ok ? pulgadas / 12 : null;
+
+  const [expresionPies, setExpresionPies] = useState("");
+  const resultadoPies = useMemo(() => evalSumaMultip(expresionPies), [expresionPies]);
 
   return (
     <div className="convertidor-container">
       <h2>Convertidor de Pulgadas a Pies</h2>
       <p className="help">
-        Escribe una expresión en <strong>pulgadas</strong> usando <code>+</code>{" "}
-        y <code>x</code>.
-        <br />
-        Ejemplos: <code>12+3x5</code>, <code>8x4 + 2.5</code>,{" "}
-        <code>24+2x6.5</code>
+        Escribe una expresión en <strong>pulgadas</strong> usando <code>+</code> y <code>x</code>.<br />
+        Ejemplos: <code>12+3x5</code>, <code>8x4 + 2.5</code>, <code>24+2x6.5</code>
       </p>
 
-      <div className="row">
-        <input
-          type="text"
-          inputMode="decimal"
-          value={expresion}
-          onChange={(e) => setExpresion(e.target.value)}
-          placeholder="Ej: 12 + 3x5 + 2.5"
-          className="convertidor-input"
-          aria-label="Expresión en pulgadas"
-        />
-      </div>
+      <form autoComplete="off" onSubmit={(e) => e.preventDefault()}>
+        <div className="row">
+          <input
+            type="text"
+            name="fakeUser"
+            style={{ display: "none" }}
+            autoComplete="off"
+          />
+          <input
+            type="text"
+            inputMode="text"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="none"
+            spellCheck={false}
+            name="expresionConvertidor"
+            id="expresionConvertidor"
+            enterKeyHint="done"
+            value={expresion}
+            onChange={(e) => setExpresion(e.target.value)}
+            placeholder="Ej: 12 + 3x5 + 2.5"
+            className="convertidor-input"
+            aria-label="Expresión en pulgadas"
+          />
+        </div>
+      </form>
 
       {!resultado.ok && expresion.trim() !== "" && (
         <div className="alert error">{resultado.error}</div>
@@ -87,10 +100,61 @@ export default function ConvertidorMedidas() {
             <strong>{pies.toFixed(4)} ft</strong>
           </div>
 
-          {/* Número grande y recomendación */}
-          {/* Número grande (solo el entero recomendado) y leyenda */}
           <div className="big-result">
             {Math.round(pies)} ft
+            <div className="recommendation">Te recomiendo usar</div>
+          </div>
+        </div>
+      )}
+
+      <hr style={{ margin: "40px 0" }} />
+
+      <h2>Suma de Medidas en Pies</h2>
+      <p className="help">
+        Escribe varias medidas en pies, incluyendo operaciones.<br />
+        Ejemplos: <code>12 + 2.5x4</code>, <code>10 + 6x2</code>
+      </p>
+
+      <form autoComplete="off" onSubmit={(e) => e.preventDefault()}>
+        <div className="row">
+          <input
+            type="text"
+            name="fakeFeetSum"
+            style={{ display: "none" }}
+            autoComplete="off"
+          />
+          <input
+            type="text"
+            inputMode="text"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="none"
+            spellCheck={false}
+            name="expresionSumador"
+            id="expresionSumador"
+            enterKeyHint="done"
+            value={expresionPies}
+            onChange={(e) => setExpresionPies(e.target.value)}
+            placeholder="Ej: 12 + 2.5x4"
+            className="convertidor-input"
+            aria-label="Suma en pies"
+          />
+        </div>
+      </form>
+
+      {!resultadoPies.ok && expresionPies.trim() !== "" && (
+        <div className="alert error">{resultadoPies.error}</div>
+      )}
+
+      {resultadoPies.ok && (
+        <div className="result">
+          <div className="result-line">
+            <span>Resultado total:</span>
+            <strong>{resultadoPies.value.toFixed(4)} ft</strong>
+          </div>
+
+          <div className="big-result">
+            {Math.round(resultadoPies.value)} ft
             <div className="recommendation">Te recomiendo usar</div>
           </div>
         </div>

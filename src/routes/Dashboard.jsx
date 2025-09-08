@@ -52,7 +52,7 @@ export default function Dashboard() {
       <main className="dashboard-main">
         <Outlet />
         <footer className="dashboard-footer">
-          TODOS LOS DERECHOS RESERVADOS (R) KUBO DEVELOPERS
+          TODOS LOS DERECHOS RESERVADOS (R) KIUBO DEVELOPERS
         </footer>
       </main>
 
