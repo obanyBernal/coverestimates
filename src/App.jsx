@@ -7,6 +7,8 @@ import TablaPrecios from "./components/TablaPrecios"; // ahora desde components
 import Buscar from "./components/Buscar";             // ahora desde components
 import ConvertidorMedidas from "./components/ConvertidorMedidas";
 import Label from "./components/Label";
+import DatabaseViewer from "./components/DatabaseViewer";
+
 
 export default function App() {
   return (
@@ -18,6 +20,7 @@ export default function App() {
         {/* Layout con sidebar */}
         <Route path="/dashboard" element={<Dashboard />}>
           <Route index element={<Navigate to="precios" replace />} />
+          <Route path="database" element={<DatabaseViewer />} />
           <Route path="precios" element={<PriceCalculator />} />
           <Route path="tabla-precios" element={<TablaPrecios />} />
           <Route path="buscar" element={<Buscar />} />

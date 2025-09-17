@@ -1,0 +1,14 @@
+{
+  "dealer": "Cristela",
+  "job": "Haydee",
+  "date": "2025-09-17T19:13:27.307Z",
+  "results": {
+    "meshRetail": 3580.46,
+    "meshDealer": 2148.276,
+    "solidRetail": 3971.5,
+    "solidDealer": 2382.9
+  },
+  "wall": "",
+  "padding": "",
+  "discount": "40"
+}

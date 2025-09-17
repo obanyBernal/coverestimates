@@ -1,0 +1,50 @@
+/* ==== DATABASE TABLE ==== */
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.db-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,.04);
+}
+
+.db-table thead {
+  background: var(--soft-2); /* usa las variables ya definidas en PriceCalculator.css */
+}
+
+.db-table th,
+.db-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+
+.db-table th {
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+
+.db-table tbody tr:nth-child(even) {
+  background: var(--soft);
+}
+
+.db-table tbody tr:hover {
+  background: #f0f8ff;
+}
+
+.db-table td {
+  color: #0b1f2a;
+}
+
+/* Ajuste para que los botones no se vean pegados */
+.db-table td .btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+}

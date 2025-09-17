@@ -1,0 +1,17 @@
+{
+  "dealer": "Kiubo",
+  "job": "12 dfdf oaskf",
+  "customGrid": "5x5",
+  "date": "2025-09-17T20:53:23.059Z",
+  "ps": "12x24 = 288",
+  "cs": "14x26 = 364",
+  "wall": "14",
+  "padding": "12",
+  "discount": "50",
+  "results": {
+    "meshRetail": 1877,
+    "meshDealer": 938.5,
+    "solidRetail": 2223,
+    "solidDealer": 1111.5
+  }
+}

@@ -37,7 +37,6 @@ export default function ExportPDFButton({
     if (!targetRef?.current) return;
 
     // Render del contenido a canvas
-    // EN ExportPDFButton.jsx, REEMPLAZA LA LLAMADA A html2canvas POR ESTA (MEJOR ESCALA)
     const canvas = await html2canvas(targetRef.current, {
       scale: 2,
       backgroundColor: "#ffffff",
@@ -49,39 +48,29 @@ export default function ExportPDFButton({
     const pageW = pdf.internal.pageSize.getWidth();
     const pageH = pdf.internal.pageSize.getHeight();
 
-    // Calcular áreas útiles
     const contentWmm = pageW - mm.margin * 2;
     const usableHmm = pageH - mm.headerH - mm.footerH;
-
-    // Relación px/mm para cortes por página
-    const pxPerMm = canvas.width / contentWmm;
-    const pageSlicePx = Math.floor(usableHmm * pxPerMm);
-
-    // Umbral: si el sobrante es menor a X mm, no crear una nueva página
-    const MIN_REMAINDER_MM = 3;
 
     // Prepara logo como DataURL
     const logoDataUrl = await urlToDataURL(logoUrl);
 
-    // Funciones de header/footer
+    // Header
     const drawHeader = () => {
-      const logoWmm = 36; // ancho del logo (ajústalo si lo quieres más grande/pequeño)
-      const logoHmm = logoWmm * 1 * 0.33; // altura aprox (relación flexible)
+      const logoWmm = 36;
+      const logoHmm = logoWmm * 0.33;
       const x = mm.margin;
-      const y = (mm.headerH - logoHmm) / 2; // centrado vertical en header
+      const y = (mm.headerH - logoHmm) / 2;
       try {
         pdf.addImage(logoDataUrl, "PNG", x, y, logoWmm, logoHmm);
       } catch {
         /* si falla el logo, no rompemos */
       }
-
-      // Línea separadora
       pdf.setLineWidth(0.2);
       pdf.line(mm.margin, mm.headerH, pageW - mm.margin, mm.headerH);
     };
 
-    const drawFooter = (pageNumber) => {
-      // Línea separadora
+    // Footer
+    const drawFooter = () => {
       pdf.setLineWidth(0.2);
       pdf.line(
         mm.margin,
@@ -89,68 +78,20 @@ export default function ExportPDFButton({
         pageW - mm.margin,
         pageH - mm.footerH
       );
-
-      // Datos de la empresa
       pdf.setFontSize(9);
       const startY = pageH - mm.footerH + 6;
       companyLines.forEach((t, i) => {
         pdf.text(t, pageW / 2, startY + i * 5, { align: "center" });
       });
-
-      // Número de página (opcional)
-      pdf.text(String(pageNumber), pageW - mm.margin, pageH - 4, {
-        align: "right",
-      });
+      pdf.text("1", pageW - mm.margin, pageH - 4, { align: "right" });
     };
 
-    // Iremos cortando el canvas por “rebanadas” de alto pageSlicePx
-    let pageIndex = 0;
-    const totalHeight = canvas.height;
+    // Convertimos todo el canvas en una sola imagen
+    const imgData = canvas.toDataURL("image/png");
+    pdf.addImage(imgData, "PNG", mm.margin, mm.headerH, contentWmm, usableHmm);
 
-    while (pageIndex * pageSlicePx < totalHeight) {
-      const sliceHeight = Math.min(
-        pageSlicePx,
-        totalHeight - pageIndex * pageSlicePx
-      );
-
-      // ⚡ si la rebanada es demasiado pequeña (< 20 px), rompemos el loop
-      if (sliceHeight < 20) break;
-
-      if (pageIndex > 0) pdf.addPage();
-
-      const sliceCanvas = document.createElement("canvas");
-      sliceCanvas.width = canvas.width;
-      sliceCanvas.height = sliceHeight;
-
-      const ctx = sliceCanvas.getContext("2d");
-      ctx.drawImage(
-        canvas,
-        0,
-        pageIndex * pageSlicePx, // srcY
-        canvas.width,
-        sliceCanvas.height, // srcH
-        0,
-        0,
-        sliceCanvas.width,
-        sliceCanvas.height
-      );
-
-      const sliceImg = sliceCanvas.toDataURL("image/png");
-
-      drawHeader();
-      drawFooter(pageIndex + 1);
-
-      pdf.addImage(
-        sliceImg,
-        "PNG",
-        mm.margin,
-        mm.headerH,
-        contentWmm,
-        sliceCanvas.height / pxPerMm
-      );
-
-      pageIndex++;
-    }
+    drawHeader();
+    drawFooter();
 
     pdf.save(filename);
   };

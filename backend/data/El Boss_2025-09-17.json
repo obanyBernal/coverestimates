@@ -1,0 +1,17 @@
+{
+  "dealer": "Ezequielk",
+  "job": "El Boss",
+  "customGrid": "3x3",
+  "date": "2025-09-17T20:17:08.280Z",
+  "ps": "23x43 = 989",
+  "cs": "25x45 = 1125",
+  "wall": "20",
+  "padding": "12",
+  "discount": "50",
+  "results": {
+    "meshRetail": 5568.75,
+    "meshDealer": 2784.375,
+    "solidRetail": 6693.75,
+    "solidDealer": 3346.875
+  }
+}

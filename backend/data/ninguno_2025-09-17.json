@@ -1,0 +1,14 @@
+{
+  "dealer": "Obany Bernal",
+  "job": "ninguno",
+  "date": "2025-09-17T18:49:47.148Z",
+  "results": {
+    "meshRetail": 0,
+    "meshDealer": 0,
+    "solidRetail": 0,
+    "solidDealer": 0
+  },
+  "wall": "",
+  "padding": "",
+  "discount": "40"
+}

@@ -207,6 +207,38 @@ const PriceCalculator = () => {
       solidDealer: 0,
     });
   };
+  // 🔹 Helper para calcular PS/CS labels
+  const computeLabels = () => {
+    const wantsCustom = customMeshEnabled || customSolidEnabled;
+    const hasStandardActive = Boolean(
+      meshEnabled ||
+        solidEnabled ||
+        meshMeasure ||
+        meshCategory ||
+        solidMeasure ||
+        solidCategory
+    );
+    const isCustomMode = wantsCustom && !hasStandardActive;
+
+    let psLabel = "—";
+    let csLabel = "—";
+
+    if (isCustomMode) {
+      const ps = parsedSqft;
+      const { expr: csExpr, total: csTotal } = growExpr(customExpr, 2);
+      psLabel = `${customExpr} = ${ps}`;
+      csLabel = `${csExpr} = ${csTotal}`;
+    } else {
+      const chosenMeasure = meshMeasure || solidMeasure || "";
+      if (chosenMeasure) {
+        const psTotal = parseAreaExpression(chosenMeasure).value;
+        const { expr: csExpr, total: csTotal } = growExpr(chosenMeasure, 2);
+        psLabel = `${chosenMeasure} = ${psTotal}`;
+        csLabel = `${csExpr} = ${csTotal}`;
+      }
+    }
+    return { psLabel, csLabel };
+  };
 
   // 🚀 handleCalculate
   const handleCalculate = () => {
@@ -359,6 +391,36 @@ const PriceCalculator = () => {
       solidRetail: solidRes.solidRetail ?? 0,
       solidDealer: solidRes.solidDealer ?? 0,
     });
+
+    // Guardar en backend
+const newResults = {
+  meshRetail: meshRes.meshRetail ?? 0,
+  meshDealer: meshRes.meshDealer ?? 0,
+  solidRetail: solidRes.solidRetail ?? 0,
+  solidDealer: solidRes.solidDealer ?? 0,
+};
+
+setResults(newResults);
+    // 🔹 obtener PS y CS que ve el usuario
+    const { psLabel, csLabel } = computeLabels();
+    // ✅ guardar en backend
+    const API_URL = import.meta.env.VITE_API_URL;
+    fetch(`${API_URL}/api/prices`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        dealer,
+        job,
+        customGrid,
+        date: new Date().toISOString(),
+        ps: psLabel,
+        cs: csLabel,
+        wall,
+        padding,
+        discount,
+        results: newResults,
+      }),
+    }).catch((err) => console.error("Error guardando:", err));
   };
 
   return (
@@ -497,132 +559,141 @@ const PriceCalculator = () => {
           </div>
         </div>
       </section>
-     {/* CUSTOM + controles globales */}
-<section
-  className="section section-custom-wrap"
-  style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}
->
-  {/* Card Custom */}
-  <div className="section" style={{ margin: 0 }}>
-    <h3>Calculo de precios Custom</h3>
+      {/* CUSTOM + controles globales */}
+      <section
+        className="section section-custom-wrap"
+        style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}
+      >
+        {/* Card Custom */}
+        <div className="section" style={{ margin: 0 }}>
+          <h3>Calculo de precios Custom</h3>
 
-    <div className="row" style={{ alignItems: "center" }}>
-      <label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-        <input
-          type="checkbox"
-          checked={customMeshEnabled}
-          onChange={() => setCustomMeshEnabled((v) => !v)}
-          disabled={customMeshDisabled}
-        />
-        Mesh
-      </label>
+          <div className="row" style={{ alignItems: "center" }}>
+            <label
+              style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
+            >
+              <input
+                type="checkbox"
+                checked={customMeshEnabled}
+                onChange={() => setCustomMeshEnabled((v) => !v)}
+                disabled={customMeshDisabled}
+              />
+              Mesh
+            </label>
 
-      <label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-        <input
-          type="checkbox"
-          checked={customSolidEnabled}
-          onChange={() => setCustomSolidEnabled((v) => !v)}
-          disabled={customSolidDisabled}
-        />
-        Solid
-      </label>
-    </div>
+            <label
+              style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
+            >
+              <input
+                type="checkbox"
+                checked={customSolidEnabled}
+                onChange={() => setCustomSolidEnabled((v) => !v)}
+                disabled={customSolidDisabled}
+              />
+              Solid
+            </label>
+          </div>
 
-    {/* Expresión */}
-    <div className="row" style={{ alignItems: "center", gap: 8 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <div>
-          <label>Pool Size (expresión)</label>
-          <input
-            type="text"
-            placeholder="Ej: 24x45 + 10x25"
-            value={customExpr}
-            onChange={(e) => setCustomExpr(e.target.value)}
-            disabled={false}
-          />
+          {/* Expresión */}
+          <div className="row" style={{ alignItems: "center", gap: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div>
+                <label>Pool Size (expresión)</label>
+                <input
+                  type="text"
+                  placeholder="Ej: 24x45 + 10x25"
+                  value={customExpr}
+                  onChange={(e) => setCustomExpr(e.target.value)}
+                  disabled={false}
+                />
+              </div>
+
+              <span className="result-label" style={{ whiteSpace: "nowrap" }}>
+                = {Number.isFinite(parsedSqft) ? `${parsedSqft} ft²` : "—"}
+              </span>
+            </div>
+          </div>
+
+          {/* Error/ayuda */}
+          <div style={{ minHeight: 20, marginTop: 4 }}>
+            {exprError ? (
+              <div className="error" style={{ color: "crimson", fontSize: 12 }}>
+                {exprError}
+              </div>
+            ) : (
+              <div className="hint" style={{ fontSize: 12, opacity: 0.7 }}>
+                Ingresa el valor, puedes ingresar valores ampliados (ej. 20x30 +
+                8x10 + 12).
+              </div>
+            )}
+          </div>
+
+          {/* 5x5 / 3x3 */}
+          <div className="row" style={{ alignItems: "center" }}>
+            <label style={{ flex: "0 0 100%", color: "#6e8796" }}>
+              Tipo de malla
+            </label>
+
+            <label
+              style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
+            >
+              <input
+                type="checkbox"
+                checked={customGrid === "5x5"}
+                onChange={() => toggleGrid("5x5")}
+                disabled={meshEnabled && solidEnabled}
+              />
+              5x5
+            </label>
+
+            <label
+              style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
+            >
+              <input
+                type="checkbox"
+                checked={customGrid === "3x3"}
+                onChange={() => toggleGrid("3x3")}
+                disabled={meshEnabled && solidEnabled}
+              />
+              3x3
+            </label>
+          </div>
         </div>
 
-        <span className="result-label" style={{ whiteSpace: "nowrap" }}>
-          = {Number.isFinite(parsedSqft) ? `${parsedSqft} ft²` : "—"}
-        </span>
-      </div>
-    </div>
+        {/* Controles globales */}
+        <div className="row" style={{ alignItems: "end" }}>
+          <div>
+            <label>Padding</label>
+            <input
+              type="number"
+              placeholder="100"
+              value={padding}
+              onChange={(e) => setPadding(e.target.value)}
+            />
+          </div>
 
-    {/* Error/ayuda */}
-    <div style={{ minHeight: 20, marginTop: 4 }}>
-      {exprError ? (
-        <div className="error" style={{ color: "crimson", fontSize: 12 }}>
-          {exprError}
+          <div>
+            <label>Wall</label>
+            <input
+              type="number"
+              placeholder="100"
+              value={wall}
+              onChange={(e) => setWall(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label>Descuento</label>
+            <input
+              type="number"
+              placeholder="45"
+              value={discount}
+              onChange={(e) => setDiscount(e.target.value)}
+            />
+          </div>
         </div>
-      ) : (
-        <div className="hint" style={{ fontSize: 12, opacity: 0.7 }}>
-          Ingresa el valor, puedes ingresar valores ampliados (ej. 20x30 + 8x10 + 12).
-        </div>
-      )}
-    </div>
-
-    {/* 5x5 / 3x3 */}
-    <div className="row" style={{ alignItems: "center" }}>
-      <label style={{ flex: "0 0 100%", color: "#6e8796" }}>
-        Tipo de malla
-      </label>
-
-      <label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-        <input
-          type="checkbox"
-          checked={customGrid === "5x5"}
-          onChange={() => toggleGrid("5x5")}
-          disabled={meshEnabled && solidEnabled}
-        />
-        5x5
-      </label>
-
-      <label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-        <input
-          type="checkbox"
-          checked={customGrid === "3x3"}
-          onChange={() => toggleGrid("3x3")}
-          disabled={meshEnabled && solidEnabled}
-        />
-        3x3
-      </label>
-    </div>
-  </div>
-
-  {/* Controles globales */}
-  <div className="row" style={{ alignItems: "end" }}>
-    <div>
-      <label>Padding</label>
-      <input
-        type="number"
-        placeholder="100"
-        value={padding}
-        onChange={(e) => setPadding(e.target.value)}
-      />
-    </div>
-
-    <div>
-      <label>Wall</label>
-      <input
-        type="number"
-        placeholder="100"
-        value={wall}
-        onChange={(e) => setWall(e.target.value)}
-      />
-    </div>
-
-    <div>
-      <label>Descuento</label>
-      <input
-        type="number"
-        placeholder="45"
-        value={discount}
-        onChange={(e) => setDiscount(e.target.value)}
-      />
-    </div>
-  </div>
-</section>
-   <section className="section results-card" style={{ background: "#fff" }}>
+      </section>
+      <section className="section results-card" style={{ background: "#fff" }}>
         <h3>Estimado</h3>
         <div className="res-grid">
           <div className="res-col">
@@ -724,101 +795,107 @@ const PriceCalculator = () => {
         </div>
       </section>
 
+      {/*  solo pdf */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "fixed",
+          left: "-10000px",
+          top: 0,
+          width: "720px",
+          zIndex: -1,
+        }}
+      >
+        <div ref={pdfRef} className="pdf-sheet">
+          {/* BLOQUE 1 */}
+          <div className="pdf-section pdf-section--primary pdf-section--compact">
+            <h3 className="pdf-title pdf-title-lg">Estimado</h3>
+            <div className="pdf-grid-2x2 pdf-kv pdf-kv-lg">
+              <div className="pdf-k">Dealer:</div>
+              <div className="pdf-v">{dealer || "—"}</div>
 
-{/*  solo pdf */}
-<div
-  aria-hidden="true"
-  style={{
-    position: "fixed",
-    left: "-10000px",
-    top: 0,
-    width: "720px",
-    zIndex: -1,
-  }}
->
-  <div ref={pdfRef} className="pdf-sheet">
-    {/* BLOQUE 1 */}
-    <div className="pdf-section pdf-section--primary pdf-section--compact">
-      <h3 className="pdf-title pdf-title-lg">Estimado</h3>
-      <div className="pdf-grid-2x2 pdf-kv pdf-kv-lg">
-        <div className="pdf-k">Dealer:</div>
-        <div className="pdf-v">{dealer || "—"}</div>
+              <div className="pdf-k">JOB:</div>
+              <div className="pdf-v">{job || "—"}</div>
 
-        <div className="pdf-k">JOB:</div>
-        <div className="pdf-v">{job || "—"}</div>
+              <div className="pdf-k">Malla:</div>
+              <div className="pdf-v">{customGrid || "—"}</div>
 
-        <div className="pdf-k">Malla:</div>
-        <div className="pdf-v">{customGrid || "—"}</div>
+              <div className="pdf-k">Fecha / Hora:</div>
+              <div className="pdf-v">
+                {new Date().toLocaleDateString()}{" "}
+                {new Date().toLocaleTimeString()}
+              </div>
+            </div>
+          </div>
 
-        <div className="pdf-k">Fecha / Hora:</div>
-        <div className="pdf-v">
-          {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
+          {/* BLOQUE 2 */}
+          <div className="pdf-section">
+            {(() => {
+              const wantsCustom = customMeshEnabled || customSolidEnabled;
+              const hasStandardActive = Boolean(
+                meshEnabled ||
+                  solidEnabled ||
+                  meshMeasure ||
+                  meshCategory ||
+                  solidMeasure ||
+                  solidCategory
+              );
+              const isCustomMode = wantsCustom && !hasStandardActive;
+
+              let psLabel = "—";
+              let csLabel = "—";
+
+              if (isCustomMode) {
+                const ps = parsedSqft;
+                const { expr: csExpr, total: csTotal } = growExpr(
+                  customExpr,
+                  2
+                );
+                psLabel = labelExpr(customExpr, ps);
+                csLabel = `${csExpr} = ${fmtNum(csTotal)}`;
+              } else {
+                const chosenMeasure = meshMeasure || solidMeasure || "";
+                if (chosenMeasure) {
+                  const psTotal = parseAreaExpression(chosenMeasure).value;
+                  const { expr: csExpr, total: csTotal } = growExpr(
+                    chosenMeasure,
+                    2
+                  );
+                  psLabel = `${chosenMeasure} = ${fmtNum(psTotal)}`;
+                  csLabel = `${csExpr} = ${fmtNum(csTotal)}`;
+                }
+              }
+
+              return (
+                <div className="pdf-kv pdf-kv-lg">
+                  <div className="pdf-k">Ps:</div>
+                  <div className="pdf-v">{psLabel}</div>
+                  <div className="pdf-k">CS:</div>
+                  <div className="pdf-v">{csLabel}</div>
+                  <div className="pdf-k">Wall:</div>
+                  <div className="pdf-v">{fmtNum(wall || 0)}</div>
+                  <div className="pdf-k">Padding:</div>
+                  <div className="pdf-v">{fmtNum(padding || 0)}</div>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* BLOQUE 3 */}
+          <div className="pdf-section">
+            <div className="pdf-kv pdf-kv-lg">
+              <div className="pdf-k">Mesh Retail:</div>
+              <div className="pdf-v">{fmtMoney(results.meshRetail)}</div>
+              <div className="pdf-k">Solid Retail:</div>
+              <div className="pdf-v">{fmtMoney(results.solidRetail)}</div>
+              <div className="pdf-k">Mesh Dealer:</div>
+              <div className="pdf-v">{fmtMoney(results.meshDealer)}</div>
+              <div className="pdf-k">Solid Dealer:</div>
+              <div className="pdf-v">{fmtMoney(results.solidDealer)}</div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-
-    {/* BLOQUE 2 */}
-    <div className="pdf-section">
-      {(() => {
-        const wantsCustom = customMeshEnabled || customSolidEnabled;
-        const hasStandardActive = Boolean(
-          meshEnabled ||
-          solidEnabled ||
-          meshMeasure ||
-          meshCategory ||
-          solidMeasure ||
-          solidCategory
-        );
-        const isCustomMode = wantsCustom && !hasStandardActive;
-
-        let psLabel = "—";
-        let csLabel = "—";
-
-        if (isCustomMode) {
-          const ps = parsedSqft;
-          const { expr: csExpr, total: csTotal } = growExpr(customExpr, 2);
-          psLabel = labelExpr(customExpr, ps);
-          csLabel = `${csExpr} = ${fmtNum(csTotal)}`;
-        } else {
-          const chosenMeasure = meshMeasure || solidMeasure || "";
-          if (chosenMeasure) {
-            const psTotal = parseAreaExpression(chosenMeasure).value;
-            const { expr: csExpr, total: csTotal } = growExpr(chosenMeasure, 2);
-            psLabel = `${chosenMeasure} = ${fmtNum(psTotal)}`;
-            csLabel = `${csExpr} = ${fmtNum(csTotal)}`;
-          }
-        }
-
-        return (
-          <div className="pdf-kv pdf-kv-lg">
-            <div className="pdf-k">Ps:</div>
-            <div className="pdf-v">{psLabel}</div>
-            <div className="pdf-k">CS:</div>
-            <div className="pdf-v">{csLabel}</div>
-            <div className="pdf-k">Wall:</div>
-            <div className="pdf-v">{fmtNum(wall || 0)}</div>
-            <div className="pdf-k">Padding:</div>
-            <div className="pdf-v">{fmtNum(padding || 0)}</div>
-          </div>
-        );
-      })()}
-    </div>
-
-    {/* BLOQUE 3 */}
-    <div className="pdf-section">
-      <div className="pdf-kv pdf-kv-lg">
-        <div className="pdf-k">Mesh Retail:</div>
-        <div className="pdf-v">{fmtMoney(results.meshRetail)}</div>
-        <div className="pdf-k">Solid Retail:</div>
-        <div className="pdf-v">{fmtMoney(results.solidRetail)}</div>
-        <div className="pdf-k">Mesh Dealer:</div>
-        <div className="pdf-v">{fmtMoney(results.meshDealer)}</div>
-        <div className="pdf-k">Solid Dealer:</div>
-        <div className="pdf-v">{fmtMoney(results.solidDealer)}</div>
-      </div>
-    </div>
-  </div>
-</div>
 
       <div
         className="button-row"
@@ -833,7 +910,11 @@ const PriceCalculator = () => {
           </button>
           <ExportPDFButton
             targetRef={pdfRef}
-            filename={job ? `${job}_${new Date().toISOString().slice(0, 10)}.pdf` : `${dealer}_${new Date().toISOString().slice(0, 10)}.pdf`}
+            filename={
+              job
+                ? `${job}_${new Date().toISOString().slice(0, 10)}.pdf`
+                : `${dealer}_${new Date().toISOString().slice(0, 10)}.pdf`
+            }
             companyLines={[
               "55 Knickerbocker Ave. Bohemia, NY 11716",
               "+1 (631) 704-0010",
