@@ -123,3 +123,41 @@
     overflow-x: auto;
   }
 }
+
+/* ========================================================= */
+/* ===== Móvil: ocultar columna FECHA para mostrar "Ver" ==== */
+/* ========================================================= */
+@media (max-width: 768px){
+  /* Caso habitual: 4 columnas -> Dealer | Job | Fecha | Acciones
+     Ocultamos la 3ª (Fecha) */
+  .db-table thead tr th:nth-child(3),
+  .db-table tbody tr td:nth-child(3){
+    display: none;
+  }
+
+  /* Si existiera una tabla de 3 columnas (Job | Fecha | Acciones),
+     ocultamos la 2ª (Fecha) SOLO si no hay 4ª columna */
+  @supports(selector(:has(*))){
+    .db-table:not(:has(thead tr th:nth-child(4))) thead tr th:nth-child(2),
+    .db-table:not(:has(tbody tr td:nth-child(4))) tbody tr td:nth-child(2){
+      display: none;
+    }
+  }
+
+  /* Que "Acciones" quede bien visible a la derecha */
+  .db-table th:last-child,
+  .db-table td:last-child{
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  /* Botón más cómodo en móvil */
+  .db-table td .btn{
+    padding: .6rem 1rem;
+  }
+
+  /* Ya no requerimos scroll horizontal para esta vista en móvil */
+  .table-wrapper{
+    overflow-x: visible;
+  }
+}
