@@ -48,3 +48,78 @@
   padding: 0.5rem 1rem;
   font-size: 0.8rem;
 }
+
+/* ===== Vista detalle (sin tocar JSX) ===== */
+/* ===== Detalle: saneo de overflow y grids internos ===== */
+.section .detail-header + div{
+  max-width: 100%;
+  overflow-x: hidden;          /* nada se escapa lateralmente en desktop */
+}
+
+/* Cualquier hijo dentro del detalle puede encoger si hace falta */
+.section .detail-header + div *,
+.section .detail-header + div .row > *,
+.section .detail-header + div .grid > *{
+  min-width: 0;                /* CLAVE para que no empuje el ancho */
+  box-sizing: border-box;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Si adentro hay grids de 2 columnas, que repartan bien el espacio */
+.section .detail-header + div .grid,
+.section .detail-header + div [class*="grid"]{
+  grid-auto-columns: minmax(0,1fr);
+}
+@media (min-width: 901px){
+  .section .detail-header + div .grid,
+  .section .detail-header + div [class*="grid"]{
+    grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+  }
+}
+
+/* Tablas internas fluidas (desktop) */
+.section .detail-header + div table{
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+.section .detail-header + div th,
+.section .detail-header + div td{
+  white-space: normal;
+}
+
+/* ===== Mobile ===== */
+@media (max-width: 900px){
+  /* Header apilado (por si aún no lo tenías) */
+  .section .detail-header{
+    flex-wrap: wrap;
+    justify-content: stretch;
+    gap: 12px;
+  }
+  .section .detail-header .btn{ width: 100%; }
+
+  /* El card del detalle compacto y sin “salirse” */
+  .section .detail-header + div{
+    padding: 12px !important;
+    border-radius: 10px !important;
+    overflow-x: auto;                 /* si algo sigue ancho: scroll horizontal */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Grids internos pasan a 1 columna */
+  .section .detail-header + div .grid,
+  .section .detail-header + div [class*="grid"],
+  .section .detail-header + div .row,
+  .section .detail-header + div [class*="row"]{
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  /* Tablas muy anchas: scroll sin romper layout */
+  .section .detail-header + div table{
+    display: block;
+    overflow-x: auto;
+  }
+}
