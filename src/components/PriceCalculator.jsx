@@ -451,7 +451,7 @@ setResults(newResults);
       </section>
       {/* STANDARD */}
       <section className="section">
-        <h3>Calculo de precios Standard</h3>
+        <h3>Calculo de precios NALGUITAS</h3>
 
         {/* Mesh */}
         <div className="row" style={{ alignItems: "center" }}>
