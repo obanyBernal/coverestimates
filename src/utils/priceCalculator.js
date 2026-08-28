@@ -79,8 +79,13 @@ export function calcularPrecio({
     if (customMeshEnabled && meshRetail > 0) meshRetail += paddingExtra + wallExtra;
     if (customSolidEnabled && solidRetail > 0) solidRetail += paddingExtra + wallExtra;
   }
+// === AUMENTO GLOBAL DE PRECIOS (+6%) ===
+const PRICE_INCREASE_FACTOR = 1.06;
 
+meshRetail *= PRICE_INCREASE_FACTOR;
+solidRetail *= PRICE_INCREASE_FACTOR;
   // === DESCUENTO DEALER ===
+  
   const discountFactor = discount ? (1 - Number(discount) / 100) : 1;
 
   return {

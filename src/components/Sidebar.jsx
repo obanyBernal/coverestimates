@@ -13,7 +13,7 @@ const Sidebar = ({ className = "", onNavigate = () => {} }) => {
     <aside className={`sidebar ${className}`}>
       <div className="sidebar-header">
         <h1 className="brand-title">Li Safety Pools Covers</h1>
-        <h2>v2.5</h2>
+        <h2>v2.6</h2>
         <span className="brand-powered">System</span>
       </div>
 
